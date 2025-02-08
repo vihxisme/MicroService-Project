@@ -11,10 +11,10 @@ spring:
 
   output:
     ansi:
-      enalble: always
+      enable: always
 
 server:
-  port: 8080
+  port: 8888
 
 eureka:
   client:
