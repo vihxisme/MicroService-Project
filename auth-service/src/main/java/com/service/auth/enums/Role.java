@@ -1,0 +1,17 @@
+package com.service.auth.enums;
+
+public enum Role {
+  ADMIN,
+  CUSTOMER,
+  SELLER,
+  GUEST,
+  SUPPORT_AGENT,
+  MANAGER,
+  DELIVERY_AGENT,
+  FINANCE,
+  INVENTORY_MANAGER,
+  MARKETING,
+  REVIEWER,
+  CONTENT_MANAGER,
+  ANALYST
+}
