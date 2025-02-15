@@ -1,6 +1,6 @@
 package com.service.auth.enums;
 
-public enum Role {
+public enum RoleEnum {
   ADMIN,
   CUSTOMER,
   SELLER,

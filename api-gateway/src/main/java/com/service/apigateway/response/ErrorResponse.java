@@ -1,4 +1,4 @@
-package com.service.auth.responses;
+package com.service.apigateway.response;
 
 import java.util.Map;
 

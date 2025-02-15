@@ -3,10 +3,11 @@ package com.service.auth.entities;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import com.service.auth.enums.Role;
+import com.service.auth.enums.RoleEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,10 +16,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -32,13 +34,19 @@ public class User {
   @Column(name = "username", unique = true, nullable = false, length = 50)
   private String username;
 
+  @Lob
   @Column(name = "password_hash", nullable = false, columnDefinition = "TEXT")
   private String password;
 
+  // @ManyToMany
+  // @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
+  // inverseJoinColumns = @JoinColumn(name = "role_id"))
+  // private Set<Role> roles;
   @Enumerated(EnumType.STRING)
-  @Column(name = "role", nullable = false, columnDefinition = "ENUM('ADMIN', 'CUSTOMER', 'SELLER', 'GUEST', 'SUPPORT_AGENT', 'MANAGER', 'DELIVERY_AGENT', 'FINANCE', 'INVENTORY_MANAGER', 'MARKETING', 'REVIEWER', 'CONTENT_MANAGER', 'ANALYST') DEFAULT 'CUSTOMER'")
-  private Role role = Role.CUSTOMER;
+  @Column(name = "role", nullable = false, columnDefinition = "ENUM('ADMIN', 'CUSTOMER', 'SELLER', 'GUEST', 'SUPPORT_AGENT', 'MANAGER', 'DELIVERY_AGENT', 'FINANCE', 'INVENTORY_MANAGER', 'MARKETING', 'REVIEWER', 'CONTENT_MANAGER', 'ANALYST')")
+  private RoleEnum role = RoleEnum.CUSTOMER;
 
+  @CreationTimestamp
   @Column(name = "created_at", updatable = false, insertable = false)
   private Timestamp createdAt;
 
@@ -82,12 +90,11 @@ public class User {
     this.password = password;
   }
 
-  public Role getRole() {
+  public RoleEnum getRole() {
     return role;
   }
 
-  public void setRole(Role role) {
+  public void setRole(RoleEnum role) {
     this.role = role;
   }
-
 }

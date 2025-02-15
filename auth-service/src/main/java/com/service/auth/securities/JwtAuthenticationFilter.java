@@ -36,7 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final RequestMatcher requestMatcher = new OrRequestMatcher(
       new AntPathRequestMatcher("/auth/login"),
       new AntPathRequestMatcher("/users/add"),
-      new AntPathRequestMatcher("/auth/register"));
+      new AntPathRequestMatcher("/auth/register"),
+      new AntPathRequestMatcher("/authenticated/validate"));
 
   @Autowired
   public JwtAuthenticationFilter(
@@ -61,6 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       }
 
       final String token = jwtTokenProvider.resolveToken(request.getHeader("Authorization"));
+      String tokken = request.getHeader("Authorization");
+      String path = request.getRequestURI();
 
       if (token != null && jwtTokenProvider.validateToken(token)) {
         String userId = jwtTokenProvider.getUserIdFromJWT(token);
@@ -75,6 +78,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
       } else {
         logger.error("Cannot set user authentication in security context");
+        logger.error("Token: " + token);
+        logger.error("Tokenn: " + tokken);
+        logger.error("Path: " + path);
         sendErrorResponse(
             response,
             request,
@@ -82,7 +88,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "Unauthorized",
             "Unauthorized");
       }
-
+      logger.error("Token: " + token);
+      logger.error("Path: " + path);
       filterChain.doFilter(request, response);
     } catch (ServletException | IOException | UsernameNotFoundException e) {
       logger.error("Could not set user authentication in security context", e);

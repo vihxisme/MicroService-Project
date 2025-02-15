@@ -1,3 +1,6 @@
+app:
+  api-prefix: /api
+
 spring:
   application:
     name: api-gateway
@@ -8,6 +11,16 @@ spring:
         locator:
           enalble: true
           lower-case-service-id: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=${app.api-prefix}/identity/**
+          filters:
+            - StripPrefix=1
+            # - PreserveHostHeader=true
+            # - RemoveRequestHeader=Cookie
+            # - AddRequestHeader=Authorization, ${Authorization}
 
   output:
     ansi:
@@ -26,3 +39,10 @@ eureka:
 logging:
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%t]){faint} %clr(%-40.40c{1.}){cyan} %clr(:){faint} %m%n%wEx"
+
+  level:
+    org.springframework.cloud.gateway: DEBUG
+# jwt
+#   secret: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+#   expiration: 86400000
+#   issuer: http://api.auth-service.com
