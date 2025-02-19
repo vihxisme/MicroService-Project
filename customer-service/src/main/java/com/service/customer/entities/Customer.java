@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.service.customer.enums.GenderEnum;
 
 import jakarta.persistence.CascadeType;
@@ -50,13 +51,13 @@ public class Customer {
   private String customerCode;
 
   @JdbcTypeCode(SqlTypes.BINARY)
-  @Column(name = "auth_user_id", nullable = false, columnDefinition = "BINARY(16)")
+  @Column(name = "auth_user_id", unique = true, nullable = false, columnDefinition = "BINARY(16)")
   private UUID authUserId;
 
   @Column(name = "first_name", nullable = false)
   private String firstName;
 
-  @Column(name = "last_name", nullable = true)
+  @Column(name = "last_name", nullable = false)
   private String lastName;
 
   @Enumerated(EnumType.STRING)
@@ -67,8 +68,14 @@ public class Customer {
   @Column(name = "date_of_birth")
   private LocalDate dateOfBirth;
 
+  @Column(name = "email", unique = true, nullable = false, length = 100)
+  private String email;
+
+  @Column(name = "phone", unique = true, nullable = false, length = 15)
+  private String phone;
+
   @Lob
-  @Column(name = "avatar")
+  @Column(name = "avatar", columnDefinition = "MEDIUMBLOB")
   private byte[] avatar;
 
   @CreationTimestamp
@@ -79,6 +86,7 @@ public class Customer {
   @Column(name = "updated_at")
   private Timestamp updatedAt;
 
+  @JsonManagedReference
   @OneToMany(mappedBy = "customerID", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Address> addresses;
 }

@@ -1,8 +1,8 @@
 package com.service.customer.requests;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,11 +13,10 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Setter
 @Getter
+@Setter
 @Builder
 public class AddInfoCustomerRequest {
-
   @NotNull
   private UUID authUserId;
 
@@ -27,11 +26,10 @@ public class AddInfoCustomerRequest {
   @NotBlank
   private String lastName;
 
+  @Email
   @NotBlank
-  private String gender;
+  private String email;
 
-  @NotNull
-  private LocalDate dob;
-
-  private byte[] avatar;
+  @NotBlank
+  private String phone;
 }

@@ -4,8 +4,11 @@ import java.nio.file.AccessDeniedException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.TransactionException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -52,15 +55,6 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
   }
 
-  // Xử lý lỗi chung cho toàn bộ hệ thống
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-    Map<String, String> errors = new HashMap<>();
-    errors.put("message", "System error: " + ex.getMessage());
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(new ErrorResponse(500, "Internal Server Error", errors));
-  }
-
   // xử lý lỗi khi không tìm thấy endpoint yêu cầu
   @ExceptionHandler(NoHandlerFoundException.class)
   public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex) {
@@ -93,4 +87,38 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(403, "Forbidden", errors));
   }
 
+  // Xử lý lỗi khi không tìm thấy dữ liệu trong database
+  @ExceptionHandler(EmptyResultDataAccessException.class)
+  public ResponseEntity<ErrorResponse> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", "Resource Not Found: " + ex.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(404, "Not Found", errors));
+  }
+
+  // Xử lý lỗi khi có vấn đề truy cập dữ liệu
+  @ExceptionHandler(DataAccessException.class)
+  public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", "Data Access Error: " + ex.getMessage());
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(new ErrorResponse(500, "Internal Server Error", errors));
+  }
+
+  // Xử lý lỗi khi có vấn đề giao dịch
+  @ExceptionHandler(TransactionException.class)
+  public ResponseEntity<ErrorResponse> handleTransactionException(TransactionException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", "Transaction Error: " + ex.getMessage());
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(new ErrorResponse(500, "Internal Server Error", errors));
+  }
+
+  // Xử lý lỗi chung cho toàn bộ hệ thống
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", "System error: " + ex.getMessage());
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(new ErrorResponse(500, "Internal Server Error", errors));
+  }
 }

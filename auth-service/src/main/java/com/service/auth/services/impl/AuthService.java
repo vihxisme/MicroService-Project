@@ -83,23 +83,6 @@ public class AuthService implements AuthInterface {
     user.setPassword(new BCryptPasswordEncoder().encode(registerUserRequest.getPassword()));
 
     return userRepository.save(user);
-    // } catch (IllegalArgumentException e) {
-    // Map<String, String> errors = new HashMap<>();
-    // errors.put("message", e.getMessage());
-    // ErrorResponse errorResponse = new ErrorResponse("Invalid Request", errors);
-    // return errorResponse;
-    // } catch (DataIntegrityViolationException e) {
-    // Map<String, String> errors = new HashMap<>();
-    // errors.put("message", e.getMessage());
-    // ErrorResponse errorResponse = new ErrorResponse("Username/Email is exist",
-    // errors);
-    // return errorResponse;
-    // } catch (Exception e) {
-    // Map<String, String> errors = new HashMap<>();
-    // errors.put("message", e.getMessage());
-    // ErrorResponse errorResponse = new ErrorResponse("System Error", errors);
-    // return errorResponse;
-    // }
   }
 
 }

@@ -1,11 +1,10 @@
 package com.service.customer.entities;
 
 import java.sql.Timestamp;
-import java.util.UUID;
 
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,24 +33,25 @@ public class Address {
   @Column(name = "id")
   private Long id;
 
-  @JdbcTypeCode(SqlTypes.BINARY)
-  @JoinColumn(name = "customer_id", columnDefinition = "BINARY(16)")
-  private UUID customerID;
+  @JsonBackReference
+  @ManyToOne
+  @JoinColumn(name = "customer_id")
+  private Customer customerID;
 
   @Column(name = "name", nullable = false)
   private String name;
 
-  @Column(name = "phone", unique = true, nullable = false, length = 10)
+  @Column(name = "phone", unique = true, nullable = false, length = 15)
   private String phone;
 
   @Column(name = "street", nullable = false)
   private String street;
 
-  @Column(name = "city", nullable = false)
-  private String city;
-
   @Column(name = "state", nullable = false)
   private String state;
+
+  @Column(name = "city", nullable = false)
+  private String city;
 
   @Column(name = "country", nullable = false)
   private String country;
