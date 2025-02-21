@@ -1,9 +1,15 @@
 package com.service.apigateway.configurations;
 
+import java.time.Duration;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -13,16 +19,47 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import com.service.apigateway.repositories.IdentityClient;
 
+import io.netty.channel.ChannelOption;
+import reactor.netty.http.client.HttpClient;
+
 @Configuration
 public class WebClientConfiguration {
 
   @Bean
-  public WebClient webClient() {
-    return WebClient.builder().baseUrl("http://localhost:8001/identity").build();
+  @LoadBalanced
+  @ConditionalOnMissingBean(WebClient.Builder.class)
+  public WebClient.Builder webClientBuilder() {
+    return WebClient.builder();
+  }
+
+  // @Bean
+  // public WebClient webClient() {
+  // return WebClient.builder()
+  // .baseUrl("http://localhost:8001/identity")
+  // .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+  // .clientConnector(new ReactorClientHttpConnector(
+  // HttpClient.create()
+  // .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000) // Thời gian chờ kết nối
+  // là 5000ms
+  // .responseTimeout(Duration.ofMillis(5000)) // Thời gian chờ phản hồi là 5000ms
+  // ))
+  // .build();
+  // }
+
+  @Bean
+  public WebClient webClient(WebClient.Builder webClientBuilder) {
+    return webClientBuilder
+        .baseUrl("http://auth-service/identity")
+        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .clientConnector(new ReactorClientHttpConnector(
+            HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000) // Thời gian chờ kết nối là 5000ms
+                .responseTimeout(Duration.ofMillis(5000)) // Thời gian chờ phản hồi là 5000ms
+        ))
+        .build();
   }
 
   @Bean
-  @SuppressWarnings("unused")
   CorsWebFilter corsWebFilter() {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
     corsConfiguration.setAllowedOrigins(List.of("*")); // Cho phép tất cả các origin
@@ -36,7 +73,6 @@ public class WebClientConfiguration {
   }
 
   @Bean
-  @SuppressWarnings("unused")
   IdentityClient identityClient(WebClient webClient) {
     HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(
         WebClientAdapter.create(webClient))
