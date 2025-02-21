@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public class LoginDTO {
   private UUID id;
+  private UUID userID;
   private String username;
   private String email;
   private String role;
@@ -11,8 +12,9 @@ public class LoginDTO {
   public LoginDTO() {
   }
 
-  public LoginDTO(UUID id, String username, String email, String role) {
+  public LoginDTO(UUID id, UUID userID, String username, String email, String role) {
     this.id = id;
+    this.userID = userID;
     this.username = username;
     this.email = email;
     this.role = role;
@@ -48,5 +50,13 @@ public class LoginDTO {
 
   public void setRole(String role) {
     this.role = role;
+  }
+
+  public UUID getUserID() {
+    return userID;
+  }
+
+  public void setUserID(UUID userID) {
+    this.userID = userID;
   }
 }
