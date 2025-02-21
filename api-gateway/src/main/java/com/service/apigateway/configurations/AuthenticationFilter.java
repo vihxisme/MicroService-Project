@@ -48,11 +48,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
     ServerHttpRequest request = exchange.getRequest();
 
-    // logger.info("Incoming request: " + request.getURI());
-    // logger.info("Authorization Header: " +
-    // request.getHeaders().get(HttpHeaders.AUTHORIZATION));
-    // logger.info("Path: " + isPublicEndpoint(request));
-
     // Kiểm tra nếu request là public API (bỏ qua xác thực)
     if (isPublicEndpoint(request)) {
       return chain.filter(exchange);
@@ -65,7 +60,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     String token = authHeaders.get(0);
-    // logger.info("Bearer Token: " + token);
 
     // Gọi IdentityService để xác thực token
     return identityService.validateToken(token)
@@ -76,8 +70,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return unauthorizedResponse(exchange.getResponse()); // Token không hợp lệ
           }
         })
-        // .onErrorResume(e -> unauthorizedResponse(exchange.getResponse())); // Xử lý
-        // lỗi nếu có
         .onErrorResume(e -> {
           logger.error("Error during token validation", e); // Thêm log lỗi chi tiết
           return unauthorizedResponse(exchange.getResponse()); // Xử lý lỗi nếu có
