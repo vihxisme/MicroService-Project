@@ -1,5 +1,6 @@
 package com.service.discount.repositories;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.service.discount.entities.Discount;
+import com.service.discount.resources.DiscountClientResource;
 
 @Repository
 public interface DiscountRepository extends JpaRepository<Discount, UUID> {
@@ -21,4 +23,19 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
   Page<Discount> findAll(Pageable pageable);
 
   Boolean existsByDiscountCode(String code);
+
+  @Query("""
+      SELECT com.service.discount.resources.DiscountClientResource(
+        d.id,
+        d.discountPercentage,
+        d.discountAmount,
+        d.minOrderValue,
+        dt.targetType,
+        dt.targetId
+      )
+      FROM Discount d
+      JOIN d.discountTargets dt
+      WHERE d.isActive=true
+      """)
+  List<DiscountClientResource> getAllDiscountsClient();
 }

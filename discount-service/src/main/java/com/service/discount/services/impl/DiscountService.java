@@ -1,5 +1,6 @@
 package com.service.discount.services.impl;
 
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ import com.service.discount.mappers.DiscountMapper;
 import com.service.discount.repositories.DiscountRepository;
 import com.service.discount.requests.DiscountRequest;
 import com.service.discount.requests.PaginationRequest;
+import com.service.discount.resources.DiscountClientResource;
 import com.service.discount.resources.DiscountResource;
 import com.service.discount.responses.PaginationResponse;
 import com.service.discount.services.interfaces.DiscountInterface;
@@ -99,6 +101,11 @@ public class DiscountService implements DiscountInterface {
     } while (!isUnique);
 
     return code;
+  }
+
+  @Override
+  public List<DiscountClientResource> getAllDiscountsClient() {
+    return discountRepository.getAllDiscountsClient();
   }
 
 }
