@@ -1,5 +1,8 @@
 package com.service.discount.repositories;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +20,7 @@ public interface DiscountTargetRepository extends JpaRepository<DiscountTarget, 
   int deleteByIdCustom(@Param("id") Long id);
 
   Page<DiscountTarget> findAll(Pageable pageable);
+
+  @Query("SELECT d FROM DiscountTarget d WHERE d.targetId = :targetId AND d.discount.status = 'ACTIVE'")
+  Optional<DiscountTarget> findActiveDiscountByTargetId(@Param("targetId") UUID targetId);
 }

@@ -22,7 +22,7 @@ import com.service.discount.responses.SuccessResponse;
 import com.service.discount.services.interfaces.DiscountInterface;
 
 @RestController
-@RequestMapping("/discount")
+@RequestMapping("/v1/discount")
 public class DiscountController {
 
   @Autowired

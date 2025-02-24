@@ -19,7 +19,7 @@ import com.service.discount.responses.SuccessResponse;
 import com.service.discount.services.interfaces.DiscountTargetInterface;
 
 @RestController
-@RequestMapping("/discount-target")
+@RequestMapping("/v1/discount-target")
 public class DiscountTargetController {
   @Autowired
   private DiscountTargetInterface discountTargetInterface;

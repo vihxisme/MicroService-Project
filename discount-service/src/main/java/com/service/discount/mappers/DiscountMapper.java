@@ -11,7 +11,7 @@ import com.service.discount.requests.DiscountRequest;
 import com.service.discount.resources.DiscountResource;
 
 @Mapper(componentModel = "spring", uses = {
-    DiscountTypeConvert.class }, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    Convert.class }, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface DiscountMapper {
   DiscountMapper INSTANCE = Mappers.getMapper(DiscountMapper.class);
 

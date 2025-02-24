@@ -20,7 +20,7 @@ import com.service.discount.responses.SuccessResponse;
 import com.service.discount.services.interfaces.DiscountTypeInterface;
 
 @RestController
-@RequestMapping("/discount-type")
+@RequestMapping("/v1/discount-type")
 public class DiscountTypeController {
   @Autowired
   private DiscountTypeInterface discountTypeInterface;

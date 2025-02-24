@@ -3,9 +3,11 @@ package com.service.discount.entities;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.service.discount.enums.TargetTypeEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,8 +37,9 @@ public class DiscountTarget {
   @JoinColumn(name = "discount_id", nullable = false)
   private Discount discount;
 
-  @Column(name = "target_type", nullable = false)
-  private String targetType;
+  @Enumerated
+  @Column(name = "target_type", nullable = false, columnDefinition = "ENUM('PRODUCT', 'CATEGORIE', 'ORDER') ")
+  private TargetTypeEnum targetType;
 
   @Column(name = "target_id", nullable = true)
   private UUID targetId;

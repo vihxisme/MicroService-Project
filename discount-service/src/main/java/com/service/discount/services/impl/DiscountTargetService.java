@@ -1,5 +1,7 @@
 package com.service.discount.services.impl;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
@@ -28,6 +30,14 @@ public class DiscountTargetService implements DiscountTargetInterface {
   @Override
   @Transactional
   public DiscountTarget createDiscountTarget(TargetRequest request) {
+
+    Optional<DiscountTarget> existingTarget = discountTargetRepository
+        .findActiveDiscountByTargetId(request.getTargetId());
+
+    if (existingTarget.isPresent()) {
+      throw new IllegalArgumentException("The Target ID already exists in an active Discount");
+    }
+
     DiscountTarget discountTarget = discountTargetMapper.toDiscountTarget(request);
 
     return discountTargetRepository.save(discountTarget);
@@ -38,6 +48,13 @@ public class DiscountTargetService implements DiscountTargetInterface {
   public DiscountTarget updateDiscountTarget(TargetRequest request) {
     DiscountTarget existDiscountTarget = discountTargetRepository.findById(request.getId())
         .orElseThrow(() -> new RuntimeException("Discount target not found"));
+
+    Optional<DiscountTarget> existingTarget = discountTargetRepository
+        .findActiveDiscountByTargetId(request.getTargetId());
+
+    if (existingTarget.isPresent()) {
+      throw new IllegalArgumentException("The Target ID already exists in an active Discount");
+    }
 
     existDiscountTarget = discountTargetMapper.updateDiscountTargetFromRequest(request, existDiscountTarget);
 
