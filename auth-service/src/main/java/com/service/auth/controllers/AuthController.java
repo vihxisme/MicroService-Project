@@ -15,6 +15,7 @@ import com.service.auth.resources.LoginResource;
 import com.service.auth.responses.ErrorResponse;
 import com.service.auth.responses.SuccessResponse;
 import com.service.auth.services.interfaces.AuthInterface;
+import com.service.auth.wrappers.RegisterUserRequestWrapper;
 
 import jakarta.validation.Valid;
 
@@ -41,9 +42,28 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Network Error");
   }
 
+  // @PostMapping("/register")
+  // public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterUserRequest
+  // registerUserRequest) {
+  // Object auth = authInterface.registerUser(registerUserRequest);
+
+  // if (auth instanceof User user) {
+  // SuccessResponse<User> successResponse = new SuccessResponse<>("SUCCESS",
+  // user);
+  // return ResponseEntity.ok(successResponse);
+  // }
+
+  // if (auth instanceof ErrorResponse errorResponse) {
+  // return ResponseEntity.unprocessableEntity().body(errorResponse);
+  // }
+
+  // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Network
+  // Error");
+  // }
+
   @PostMapping("/register")
-  public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterUserRequest registerUserRequest) {
-    Object auth = authInterface.registerUser(registerUserRequest);
+  public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterUserRequestWrapper request) {
+    Object auth = authInterface.registerUser(request);
 
     if (auth instanceof User user) {
       SuccessResponse<User> successResponse = new SuccessResponse<>("SUCCESS", user);

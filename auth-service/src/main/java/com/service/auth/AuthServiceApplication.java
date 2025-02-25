@@ -2,16 +2,14 @@ package com.service.auth;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
+@EnableFeignClients
 @EnableDiscoveryClient
-@SpringBootApplication
-@ComponentScan(basePackages = "com.service.auth")
+@SpringBootApplication(scanBasePackages = "com.service.auth")
 public class AuthServiceApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(AuthServiceApplication.class, args);
-	}
-
+  public static void main(String[] args) {
+    SpringApplication.run(AuthServiceApplication.class, args);
+  }
 }

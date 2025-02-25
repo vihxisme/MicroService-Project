@@ -4,17 +4,17 @@ import java.util.Map;
 
 public class ErrorResponse {
   private final int code;
-  private final String massage;
+  private final String message;
   private final Map<String, String> errors;
 
-  public ErrorResponse(int code, String massage, Map<String, String> errors) {
+  public ErrorResponse(int code, String message, Map<String, String> errors) {
     this.code = code;
-    this.massage = massage;
+    this.message = message;
     this.errors = errors;
   }
 
   public String getMassage() {
-    return massage;
+    return message;
   }
 
   public Map<String, String> getErrors() {
