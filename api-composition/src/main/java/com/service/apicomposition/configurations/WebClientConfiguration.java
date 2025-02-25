@@ -17,4 +17,14 @@ public class WebClientConfiguration {
   public WebClient customerWebClient(WebClient.Builder webClientBuilder) {
     return webClientBuilder.baseUrl("http://customer-service/customer").build();
   }
+
+  @Bean
+  public WebClient productWebClient(WebClient.Builder webClientBuilder) {
+    return webClientBuilder.baseUrl("http://product-service/product").build();
+  }
+
+  @Bean
+  public WebClient discountWebClient(WebClient.Builder webClientBuilder) {
+    return webClientBuilder.baseUrl("http://discount-service/discount").build();
+  }
 }
