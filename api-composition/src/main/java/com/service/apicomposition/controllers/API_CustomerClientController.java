@@ -42,23 +42,6 @@ public class API_CustomerClientController {
 
     WebClient.RequestHeadersSpec<?> requestSpec = customerClient.method(method).uri(path);
 
-    // // Kiểm tra nếu là GET thì không cần body
-    // if (method == HttpMethod.GET || method == HttpMethod.DELETE) {
-    // return requestSpec.retrieve()
-    // .bodyToMono(Object.class)
-    // .map(ResponseEntity::ok);
-    // }
-
-    // // Với POST, PUT, PATCH thì cần lấy body
-    // return exchange.getRequest().getBody()
-    // .next()
-    // .flatMap(body -> ((RequestBodySpec) requestSpec)
-    // .contentType(MediaType.APPLICATION_JSON)
-    // .body(BodyInserters.fromDataBuffers(Mono.just(body)))
-    // .retrieve()
-    // .bodyToMono(Object.class))
-    // .map(ResponseEntity::ok);
-
     return exchange.getRequest().getBody()
         .collectList()
         .flatMap(body -> {
