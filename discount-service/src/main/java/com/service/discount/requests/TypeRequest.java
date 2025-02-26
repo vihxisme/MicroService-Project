@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class TypeRequest {
-  private Long id;
+  private Integer id;
   private String typeCode;
 
   @NotBlank

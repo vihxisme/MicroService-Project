@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @Builder
 public class TypeResource {
-  private final Long id;
+  private final Integer id;
 
   private final String type;
 }

@@ -19,7 +19,7 @@ public class DiscountRequest {
   private UUID id;
   private String discountCode;
 
-  private Long discountType;
+  private Integer discountType;
 
   private String discountTitle;
   private BigDecimal discountPercentage;
