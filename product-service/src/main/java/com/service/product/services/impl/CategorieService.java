@@ -1,8 +1,10 @@
 package com.service.product.services.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -96,5 +98,12 @@ public class CategorieService implements CategorieInterface {
         .totalPages(categories.getTotalPages())
         .totalElements(categories.getTotalElements())
         .build();
+  }
+
+  @Override
+  public Map<UUID, String> getCategorieName(List<UUID> categorieIds) {
+    return categorieRepository.findAllById(categorieIds)
+        .stream()
+        .collect(Collectors.toMap(Categorie::getId, Categorie::getName));
   }
 }

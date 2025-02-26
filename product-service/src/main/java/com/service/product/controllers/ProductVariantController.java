@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.service.product.requests.ProductVariantRequest;
@@ -69,18 +70,19 @@ public class ProductVariantController {
   }
 
   @GetMapping("/sizes/product")
-  public ResponseEntity<?> getSizeFromVariantForProduct(@ModelAttribute ProductVariantRequest request) {
+  public ResponseEntity<?> getSizeFromVariantForProduct(@RequestParam UUID productId, @RequestParam Integer colorId) {
     return ResponseEntity.ok(
         new SuccessResponse<>(
             "SUCCESS",
-            productVariantInterface.getSizeFromVariantForProduct(request)));
+            productVariantInterface.getSizeFromVariantForProduct(productId, colorId)));
   }
 
   @GetMapping("/colors/product")
-  public ResponseEntity<?> getVariantByProductIdAndColorId(@ModelAttribute ProductVariantRequest request) {
+  public ResponseEntity<?> getVariantByProductIdAndColorId(@RequestParam UUID productId,
+      @RequestParam Integer colorId) {
     return ResponseEntity.ok(
         new SuccessResponse<>(
             "SUCCESS",
-            productVariantInterface.getVariantByProductIdAndColorId(request)));
+            productVariantInterface.getVariantByProductIdAndColorId(productId, colorId)));
   }
 }

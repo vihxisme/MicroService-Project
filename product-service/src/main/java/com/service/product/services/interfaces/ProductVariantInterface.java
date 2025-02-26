@@ -20,7 +20,7 @@ public interface ProductVariantInterface {
 
   List<ColorResource> getColorsFromVariant(UUID productId);
 
-  List<SizeResource> getSizeFromVariantForProduct(ProductVariantRequest request);
+  List<SizeResource> getSizeFromVariantForProduct(UUID productId, Integer colorId);
 
-  List<ProductVariant> getVariantByProductIdAndColorId(ProductVariantRequest request);
+  List<ProductVariant> getVariantByProductIdAndColorId(UUID productId, Integer colorId);
 }

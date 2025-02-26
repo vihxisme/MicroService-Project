@@ -67,6 +67,8 @@ public class ProductDetailService implements ProductDetailInterface {
 
       productDetailMapper.updateProductDetailFromRequest(request, existProductDetail);
 
+      logger.info("id: " + existProductDetail.getId());
+
       existProductDetails.add(existProductDetail);
     }
 
@@ -83,15 +85,6 @@ public class ProductDetailService implements ProductDetailInterface {
     List<ProductDetail> existProductDetails = productDetailRepository.findAllById(ids);
 
     if (existProductDetails.size() != ids.size()) {
-      // Tìm các ID không tồn tại trong cơ sở dữ liệu
-      // List<Integer> existingIds = existProductDetails.stream()
-      // .map(ProductDetail::getId)
-      // .collect(Collectors.toList());
-
-      // List<Integer> missingIds = ids.stream()
-      // .filter(id -> !existingIds.contains(id))
-      // .collect(Collectors.toList());
-
       throw new EntityNotFoundException("ProductDetail not found");
     }
 
@@ -106,31 +99,6 @@ public class ProductDetailService implements ProductDetailInterface {
         .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
     return productDetailRepository.findByProduct(product);
-  }
-
-  @Override
-  public ProductDetail create(ProductDetailRequest request) {
-    ProductDetail productDetail = productDetailMapper.toProductDetail(request);
-
-    // logger.info("id: " + productDetail.getId());
-    // logger.info("name: " + productDetail.getAttributeName());
-    // logger.info("value: " + productDetail.getAttributeValue());
-
-    // // return productDetailRepository.save(productDetail);
-
-    // ProductDetail savedProductDetail =
-    // productDetailRepository.save(productDetail);
-
-    // logger.info("Saved productDetail: " + savedProductDetail);
-    // return savedProductDetail;
-    try {
-      ProductDetail savedProductDetail = productDetailRepository.save(productDetail);
-      logger.info("Saved productDetail: " + savedProductDetail);
-      return savedProductDetail;
-    } catch (Exception e) {
-      logger.error("Error while saving productDetail: ", e);
-      throw e;
-    }
   }
 
 }

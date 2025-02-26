@@ -1,6 +1,7 @@
 package com.service.product.services.interfaces;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.service.product.entities.Categorie;
@@ -18,4 +19,6 @@ public interface CategorieInterface {
   List<Categorie> getAllCategorie();
 
   PaginationResponse<Categorie> getAllCategorie(PaginationRequest request);
+
+  Map<UUID, String> getCategorieName(List<UUID> categorieIds);
 }

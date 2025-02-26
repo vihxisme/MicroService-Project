@@ -1,6 +1,7 @@
 package com.service.product.services.interfaces;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.service.product.entities.Product;
@@ -20,5 +21,9 @@ public interface ProductInterface {
 
   List<ProductResource> getAllProductElseInactive();
 
-  List<ProductResource> getAllProductByCategorie(UUID categoriId);
+  PaginationResponse<ProductResource> getAllProductByCategorie(UUID categoriId, PaginationRequest request);
+
+  Map<UUID, String> getProductName(List<UUID> productIds);
+
+  PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request);
 }

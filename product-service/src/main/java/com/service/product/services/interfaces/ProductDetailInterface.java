@@ -11,8 +11,6 @@ public interface ProductDetailInterface {
 
   List<ProductDetail> updateProductDetailsList(List<ProductDetailRequest> requests);
 
-  ProductDetail create(ProductDetailRequest request);
-
   Boolean deleteProductDetailList(List<Integer> ids);
 
   List<ProductDetail> getProductDetailById(UUID productId);

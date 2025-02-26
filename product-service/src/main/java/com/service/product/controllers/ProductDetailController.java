@@ -24,14 +24,6 @@ public class ProductDetailController {
   @Autowired
   private ProductDetailInterface productDetailInterface;
 
-  @PostMapping("/create/tt")
-  public ResponseEntity<?> create(@RequestBody ProductDetailRequest request) {
-    return ResponseEntity.ok(
-        new SuccessResponse<>(
-            "SUCCESS",
-            productDetailInterface.create(request)));
-  }
-
   @PostMapping("/create")
   public ResponseEntity<?> createProductDetail(@RequestBody List<ProductDetailRequest> requests) {
     return ResponseEntity.ok(
@@ -45,7 +37,7 @@ public class ProductDetailController {
     return ResponseEntity.ok(
         new SuccessResponse<>(
             "SUCCESS",
-            productDetailInterface.createProductDetailList(requests)));
+            productDetailInterface.updateProductDetailsList(requests)));
   }
 
   @PostMapping("/delete")

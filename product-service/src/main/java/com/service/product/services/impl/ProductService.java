@@ -1,6 +1,7 @@
 package com.service.product.services.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -113,17 +114,47 @@ public class ProductService implements ProductInterface {
   }
 
   @Override
-  public List<ProductResource> getAllProductByCategorie(UUID categoriId) {
+  public PaginationResponse<ProductResource> getAllProductByCategorie(UUID categoriId, PaginationRequest request) {
     Categorie categorie = categorieRepository.findById(categoriId)
         .orElseThrow(() -> new EntityNotFoundException("Categorie not found"));
 
-    List<Product> products = productRepository.findAllByCategorie(categorie);
+    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-    List<ProductResource> productResources = products.stream()
-        .map(productMapper::toProductResource)
-        .collect(Collectors.toList());
+    Page<Product> productsByCategorie = productRepository.findAllByCategorie(categorie, pageable);
 
-    return productResources;
+    Page<ProductResource> productResourcesByCategorie = productsByCategorie.map(productMapper::toProductResource);
+
+    return PaginationResponse.<ProductResource>builder()
+        .content(productResourcesByCategorie.getContent())
+        .pageNumber(productResourcesByCategorie.getNumber())
+        .pageSize(productResourcesByCategorie.getSize())
+        .totalPages(productResourcesByCategorie.getTotalPages())
+        .totalElements(productResourcesByCategorie.getTotalElements())
+        .build();
+  }
+
+  @Override
+  public Map<UUID, String> getProductName(List<UUID> productIds) {
+    return productRepository.findAllById(productIds)
+        .stream()
+        .collect(Collectors.toMap(Product::getId, Product::getName));
+  }
+
+  @Override
+  public PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request) {
+    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+    Page<Product> products = productRepository.findAllElseInactive(pageable);
+
+    Page<ProductResource> productResources = products.map(productMapper::toProductResource);
+
+    return PaginationResponse.<ProductResource>builder()
+        .content(productResources.getContent())
+        .pageNumber(productResources.getNumber())
+        .pageSize(productResources.getSize())
+        .totalPages(productResources.getTotalPages())
+        .totalElements(productResources.getTotalElements())
+        .build();
   }
 
 }

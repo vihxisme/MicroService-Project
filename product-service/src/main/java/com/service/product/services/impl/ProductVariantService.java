@@ -89,13 +89,13 @@ public class ProductVariantService implements ProductVariantInterface {
   }
 
   @Override
-  public List<SizeResource> getSizeFromVariantForProduct(ProductVariantRequest request) {
-    return productVariantRepository.findSizeByProductIdAndColor(request.getProductId(), request.getColorId());
+  public List<SizeResource> getSizeFromVariantForProduct(UUID productId, Integer colorId) {
+    return productVariantRepository.findSizeByProductIdAndColor(productId, colorId);
   }
 
   @Override
-  public List<ProductVariant> getVariantByProductIdAndColorId(ProductVariantRequest request) {
-    return productVariantRepository.findAllByProductIdAndColor(request.getProductId(), request.getColorId());
+  public List<ProductVariant> getVariantByProductIdAndColorId(UUID productId, Integer colorId) {
+    return productVariantRepository.findAllByProductIdAndColor(productId, colorId);
   }
 
 }
