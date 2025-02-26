@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.service.discount.entities.Discount;
 import com.service.discount.resources.DiscountClientResource;
+import com.service.discount.resources.DiscountWithTargetResource;
 
 @Repository
 public interface DiscountRepository extends JpaRepository<Discount, UUID> {
@@ -25,12 +26,12 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
   Boolean existsByDiscountCode(String code);
 
   @Query("""
-      SELECT com.service.discount.resources.DiscountClientResource(
+      SELECT new com.service.discount.resources.DiscountClientResource(
         d.id,
         d.discountPercentage,
         d.discountAmount,
         d.minOrderValue,
-        dt.targetType,
+        CAST(dt.targetType AS string),
         dt.targetId
       )
       FROM Discount d
@@ -38,4 +39,37 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
       WHERE d.isActive=true
       """)
   List<DiscountClientResource> getAllDiscountsClient();
+
+  @Query("""
+      SELECT new com.service.discount.resources.DiscountClientResource(
+        d.id,
+        d.discountPercentage,
+        d.discountAmount,
+        d.minOrderValue,
+        CAST(dt.targetType AS string),
+        dt.targetId
+      )
+      FROM Discount d
+      JOIN d.discountTargets dt
+      WHERE d.isActive=true
+      """)
+  Page<DiscountClientResource> getDiscountsWithTarget(Pageable pageble);
+
+  @Query("""
+      SELECT new com.service.discount.resources.DiscountWithTargetResource(
+        dt.id,
+        d.id,
+        d.discountCode,
+        d.discountTitle,
+        d.discountPercentage,
+        d.discountAmount,
+        d.minOrderValue,
+        CAST(dt.targetType AS string),
+        dt.targetId
+      )
+      FROM Discount d
+      JOIN d.discountTargets dt
+      WHERE d.isActive=true
+      """)
+  Page<DiscountWithTargetResource> getDiscountWithTargets(Pageable pageable);
 }

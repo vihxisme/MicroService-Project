@@ -12,15 +12,17 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.service.discount.entities.DiscountTarget;
+import com.service.discount.resources.DiscountWithTargetResource;
 
 @Repository
-public interface DiscountTargetRepository extends JpaRepository<DiscountTarget, Long> {
+public interface DiscountTargetRepository extends JpaRepository<DiscountTarget, Integer> {
   @Modifying
   @Query("DELETE FROM DiscountTarget dt WHERE dt.id = :id")
-  int deleteByIdCustom(@Param("id") Long id);
+  int deleteByIdCustom(@Param("id") Integer id);
 
   Page<DiscountTarget> findAll(Pageable pageable);
 
-  @Query("SELECT d FROM DiscountTarget d WHERE d.targetId = :targetId AND d.discount.status = 'ACTIVE'")
+  @Query("SELECT d FROM DiscountTarget d WHERE d.targetId = :targetId AND d.discount.isActive = true")
   Optional<DiscountTarget> findActiveDiscountByTargetId(@Param("targetId") UUID targetId);
+
 }

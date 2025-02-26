@@ -9,10 +9,10 @@ import org.springframework.stereotype.Repository;
 import com.service.discount.entities.DiscountType;
 
 @Repository
-public interface DiscountTypeRepository extends JpaRepository<DiscountType, Long> {
+public interface DiscountTypeRepository extends JpaRepository<DiscountType, Integer> {
   @Modifying
   @Query("DELETE FROM DiscountType dt WHERE dt.id = :id")
-  int deleteByIdCustom(@Param("id") Long id);
+  int deleteByIdCustom(@Param("id") Integer id);
 
   Boolean existsByTypeCode(@Param("code") String code);
 }

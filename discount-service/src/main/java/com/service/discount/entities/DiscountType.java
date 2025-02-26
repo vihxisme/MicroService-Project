@@ -29,7 +29,7 @@ import lombok.Setter;
 public class DiscountType {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Integer id;
 
   @Column(name = "type_code", unique = true, nullable = false)
   private String typeCode;

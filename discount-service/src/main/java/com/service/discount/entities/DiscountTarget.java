@@ -7,6 +7,7 @@ import com.service.discount.enums.TargetTypeEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,14 +31,14 @@ import lombok.Setter;
 public class DiscountTarget {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Integer id;
 
   @JsonBackReference
   @ManyToOne
   @JoinColumn(name = "discount_id", nullable = false)
   private Discount discount;
 
-  @Enumerated
+  @Enumerated(EnumType.STRING)
   @Column(name = "target_type", nullable = false, columnDefinition = "ENUM('PRODUCT', 'CATEGORIE', 'ORDER') ")
   private TargetTypeEnum targetType;
 
