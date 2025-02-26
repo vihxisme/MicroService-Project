@@ -10,16 +10,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.service.product.entities.Categorie;
 import com.service.product.entities.Product;
 import com.service.product.mappers.ProductMapper;
+import com.service.product.repositories.ApiClient;
 import com.service.product.repositories.CategorieRepository;
 import com.service.product.repositories.ProductRepository;
 import com.service.product.requests.PaginationRequest;
 import com.service.product.requests.ProductRequest;
 import com.service.product.resources.ProductResource;
+import com.service.product.resources.ProductWithDiscountResource;
 import com.service.product.responses.PaginationResponse;
 import com.service.product.services.interfaces.ProductInterface;
 
@@ -29,132 +35,150 @@ import jakarta.transaction.Transactional;
 @Service
 public class ProductService implements ProductInterface {
 
-  @Autowired
-  private ProductRepository productRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
-  @Autowired
-  private CategorieRepository categorieRepository;
+    @Autowired
+    private CategorieRepository categorieRepository;
 
-  @Autowired
-  private ProductMapper productMapper;
+    @Autowired
+    private ApiClient apiClient;
 
-  @Override
-  @Transactional
-  public Product createProduct(ProductRequest request) {
-    if (request.getProductCode() == null) {
-      request.setProductCode(generateProductCode());
+    @Autowired
+    private ProductMapper productMapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Override
+    @Transactional
+    public Product createProduct(ProductRequest request) {
+        if (request.getProductCode() == null) {
+            request.setProductCode(generateProductCode());
+        }
+
+        Product product = productMapper.toProduct(request);
+
+        return productRepository.save(product);
     }
 
-    Product product = productMapper.toProduct(request);
+    @Override
+    @Transactional
+    public Product updateProduct(ProductRequest request) {
+        Product existProduct = productRepository.findById(request.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-    return productRepository.save(product);
-  }
+        productMapper.updateProductFromRequest(request, existProduct);
 
-  @Override
-  @Transactional
-  public Product updateProduct(ProductRequest request) {
-    Product existProduct = productRepository.findById(request.getId())
-        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        return productRepository.save(existProduct);
+    }
 
-    productMapper.updateProductFromRequest(request, existProduct);
+    @Override
+    @Transactional
+    public Boolean deleteProduct(UUID id) {
+        Product existProduct = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-    return productRepository.save(existProduct);
-  }
+        productRepository.delete(existProduct);
 
-  @Override
-  @Transactional
-  public Boolean deleteProduct(UUID id) {
-    Product existProduct = productRepository.findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        return true;
+    }
 
-    productRepository.delete(existProduct);
+    private String generateProductCode() {
+        Boolean isUnique;
+        Random random = new Random();
+        String code;
+        do {
+            int randomNumberStart = random.nextInt(100, 999);
+            int randomNumberMiddle = random.nextInt(10000, 99999);
+            int randomNumberEnd = random.nextInt(10000, 99999);
+            code = String.format("%03d-%05d-%05d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
+            isUnique = !productRepository.existsByProductCode(code);
+        } while (!isUnique);
 
-    return true;
-  }
+        return code;
+    }
 
-  private String generateProductCode() {
-    Boolean isUnique;
-    Random random = new Random();
-    String code;
-    do {
-      int randomNumberStart = random.nextInt(100, 999);
-      int randomNumberMiddle = random.nextInt(10000, 99999);
-      int randomNumberEnd = random.nextInt(10000, 99999);
-      code = String.format("%03d-%05d-%05d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
-      isUnique = !productRepository.existsByProductCode(code);
-    } while (!isUnique);
+    @Override
+    public PaginationResponse<Product> getAllProduct(PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-    return code;
-  }
+        Page<Product> prosducts = productRepository.findAll(pageable);
 
-  @Override
-  public PaginationResponse<Product> getAllProduct(PaginationRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        return PaginationResponse.<Product>builder()
+                .content(prosducts.getContent())
+                .pageNumber(prosducts.getNumber())
+                .pageSize(prosducts.getSize())
+                .totalPages(prosducts.getTotalPages())
+                .totalElements(prosducts.getTotalElements())
+                .build();
+    }
 
-    Page<Product> prosducts = productRepository.findAll(pageable);
+    @Override
+    public List<ProductResource> getAllProductElseInactive() {
+        List<Product> products = productRepository.findAllElseInactive();
 
-    return PaginationResponse.<Product>builder()
-        .content(prosducts.getContent())
-        .pageNumber(prosducts.getNumber())
-        .pageSize(prosducts.getSize())
-        .totalPages(prosducts.getTotalPages())
-        .totalElements(prosducts.getTotalElements())
-        .build();
-  }
+        List<ProductResource> productResources = products.stream()
+                .map(productMapper::toProductResource)
+                .collect(Collectors.toList());
 
-  @Override
-  public List<ProductResource> getAllProductElseInactive() {
-    List<Product> products = productRepository.findAllElseInactive();
+        return productResources;
+    }
 
-    List<ProductResource> productResources = products.stream()
-        .map(productMapper::toProductResource)
-        .collect(Collectors.toList());
+    @Override
+    public PaginationResponse<ProductResource> getAllProductByCategorie(UUID categoriId, PaginationRequest request) {
+        Categorie categorie = categorieRepository.findById(categoriId)
+                .orElseThrow(() -> new EntityNotFoundException("Categorie not found"));
 
-    return productResources;
-  }
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-  @Override
-  public PaginationResponse<ProductResource> getAllProductByCategorie(UUID categoriId, PaginationRequest request) {
-    Categorie categorie = categorieRepository.findById(categoriId)
-        .orElseThrow(() -> new EntityNotFoundException("Categorie not found"));
+        Page<Product> productsByCategorie = productRepository.findAllByCategorie(categorie, pageable);
 
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Page<ProductResource> productResourcesByCategorie = productsByCategorie.map(productMapper::toProductResource);
 
-    Page<Product> productsByCategorie = productRepository.findAllByCategorie(categorie, pageable);
+        return PaginationResponse.<ProductResource>builder()
+                .content(productResourcesByCategorie.getContent())
+                .pageNumber(productResourcesByCategorie.getNumber())
+                .pageSize(productResourcesByCategorie.getSize())
+                .totalPages(productResourcesByCategorie.getTotalPages())
+                .totalElements(productResourcesByCategorie.getTotalElements())
+                .build();
+    }
 
-    Page<ProductResource> productResourcesByCategorie = productsByCategorie.map(productMapper::toProductResource);
+    @Override
+    public Map<UUID, String> getProductName(List<UUID> productIds) {
+        return productRepository.findAllById(productIds)
+                .stream()
+                .collect(Collectors.toMap(Product::getId, Product::getName));
+    }
 
-    return PaginationResponse.<ProductResource>builder()
-        .content(productResourcesByCategorie.getContent())
-        .pageNumber(productResourcesByCategorie.getNumber())
-        .pageSize(productResourcesByCategorie.getSize())
-        .totalPages(productResourcesByCategorie.getTotalPages())
-        .totalElements(productResourcesByCategorie.getTotalElements())
-        .build();
-  }
+    @Override
+    public PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-  @Override
-  public Map<UUID, String> getProductName(List<UUID> productIds) {
-    return productRepository.findAllById(productIds)
-        .stream()
-        .collect(Collectors.toMap(Product::getId, Product::getName));
-  }
+        Page<Product> products = productRepository.findAllElseInactive(pageable);
 
-  @Override
-  public PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Page<ProductResource> productResources = products.map(productMapper::toProductResource);
 
-    Page<Product> products = productRepository.findAllElseInactive(pageable);
+        return PaginationResponse.<ProductResource>builder()
+                .content(productResources.getContent())
+                .pageNumber(productResources.getNumber())
+                .pageSize(productResources.getSize())
+                .totalPages(productResources.getTotalPages())
+                .totalElements(productResources.getTotalElements())
+                .build();
+    }
 
-    Page<ProductResource> productResources = products.map(productMapper::toProductResource);
+    @Override
+    public PaginationResponse<ProductWithDiscountResource> getProductWithDiscount(PaginationRequest request) {
+        ResponseEntity<?> resource = apiClient.getProductWithDiscount(request.getPage(), request.getSize());
 
-    return PaginationResponse.<ProductResource>builder()
-        .content(productResources.getContent())
-        .pageNumber(productResources.getNumber())
-        .pageSize(productResources.getSize())
-        .totalPages(productResources.getTotalPages())
-        .totalElements(productResources.getTotalElements())
-        .build();
-  }
+        PaginationResponse<ProductWithDiscountResource> productWPaginationResponse = objectMapper.convertValue(
+                resource.getBody(),
+                new TypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        });
+
+        return productWPaginationResponse;
+    }
 
 }

@@ -18,30 +18,32 @@ import com.service.product.services.interfaces.ProductInterface;
 @RestController
 @RequestMapping("/internal")
 public class InternalController {
-  @Autowired
-  private ProductInterface productInterface;
 
-  @Autowired
-  private CategorieInterface categorieInterface;
+    @Autowired
+    private ProductInterface productInterface;
 
-  @GetMapping("/products/list")
-  public ResponseEntity<?> getAllProductElseInactive(@ModelAttribute PaginationRequest request) {
-    return ResponseEntity.ok(productInterface.getAllProductElseInactive(request));
-  }
+    @Autowired
+    private CategorieInterface categorieInterface;
 
-  @GetMapping("/products/categorie")
-  public ResponseEntity<?> getAllProductByCategorie(@RequestParam String categorieId,
-      @ModelAttribute PaginationRequest request) {
-    return ResponseEntity.ok(productInterface.getAllProductByCategorie(UUID.fromString(categorieId), request));
-  }
+    @GetMapping("/products/list")
+    public ResponseEntity<?> getAllProductElseInactive(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(productInterface.getAllProductElseInactive(request));
+    }
 
-  @GetMapping("/product-names")
-  public ResponseEntity<?> getProductName(@RequestParam List<UUID> productIds) {
-    return ResponseEntity.ok(productInterface.getProductName(productIds));
-  }
+    @GetMapping("/products/categorie")
+    public ResponseEntity<?> getAllProductByCategorie(@RequestParam String categorieId,
+            @ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(productInterface.getAllProductByCategorie(UUID.fromString(categorieId), request));
+    }
 
-  @GetMapping("/categorie-names")
-  public ResponseEntity<?> getCategorieName(@RequestParam List<UUID> categorieIds) {
-    return ResponseEntity.ok(categorieInterface.getCategorieName(categorieIds));
-  }
+    @GetMapping("/product-names")
+    public ResponseEntity<?> getProductName(@RequestParam List<UUID> productIds) {
+        return ResponseEntity.ok(productInterface.getProductName(productIds));
+    }
+
+    @GetMapping("/categorie-names")
+    public ResponseEntity<?> getCategorieName(@RequestParam List<UUID> categorieIds) {
+        return ResponseEntity.ok(categorieInterface.getCategorieName(categorieIds));
+    }
+
 }

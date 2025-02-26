@@ -8,22 +8,26 @@ import com.service.product.entities.Product;
 import com.service.product.requests.PaginationRequest;
 import com.service.product.requests.ProductRequest;
 import com.service.product.resources.ProductResource;
+import com.service.product.resources.ProductWithDiscountResource;
 import com.service.product.responses.PaginationResponse;
 
 public interface ProductInterface {
-  Product createProduct(ProductRequest request);
 
-  Product updateProduct(ProductRequest request);
+    Product createProduct(ProductRequest request);
 
-  Boolean deleteProduct(UUID id);
+    Product updateProduct(ProductRequest request);
 
-  PaginationResponse<Product> getAllProduct(PaginationRequest request);
+    Boolean deleteProduct(UUID id);
 
-  List<ProductResource> getAllProductElseInactive();
+    PaginationResponse<Product> getAllProduct(PaginationRequest request);
 
-  PaginationResponse<ProductResource> getAllProductByCategorie(UUID categoriId, PaginationRequest request);
+    List<ProductResource> getAllProductElseInactive();
 
-  Map<UUID, String> getProductName(List<UUID> productIds);
+    PaginationResponse<ProductResource> getAllProductByCategorie(UUID categoriId, PaginationRequest request);
 
-  PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request);
+    Map<UUID, String> getProductName(List<UUID> productIds);
+
+    PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request);
+
+    PaginationResponse<ProductWithDiscountResource> getProductWithDiscount(PaginationRequest request);
 }

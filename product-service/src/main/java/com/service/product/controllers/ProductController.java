@@ -22,39 +22,48 @@ import com.service.product.services.interfaces.ProductInterface;
 @RestController
 @RequestMapping("/v1/products")
 public class ProductController {
-  @Autowired
-  private ProductInterface productInterface;
 
-  @PostMapping("/create")
-  public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
-    return ResponseEntity.ok(
-        new SuccessResponse<>(
-            "SUCCESS",
-            productInterface.createProduct(request)));
-  }
+    @Autowired
+    private ProductInterface productInterface;
 
-  @PatchMapping("/update")
-  public ResponseEntity<?> updateProduct(@RequestBody ProductRequest request) {
-    return ResponseEntity.ok(
-        new SuccessResponse<>(
-            "SUCCESS",
-            productInterface.updateProduct(request)));
-  }
+    @PostMapping("/create")
+    public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.createProduct(request)));
+    }
 
-  @DeleteMapping("/delete/{id}")
-  public ResponseEntity<?> deleteProduct(@PathVariable String id) {
-    return ResponseEntity.ok(
-        new SuccessResponse<>(
-            "SUCCESS",
-            productInterface.deleteProduct(UUID.fromString(id))));
-  }
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateProduct(@RequestBody ProductRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.updateProduct(request)));
+    }
 
-  @GetMapping("/info/all")
-  public ResponseEntity<?> getAllProduct(@ModelAttribute PaginationRequest request) {
-    return ResponseEntity.ok(
-        new SuccessResponse<>(
-            "SUCCESS",
-            productInterface.getAllProduct(request)));
-  }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable String id) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.deleteProduct(UUID.fromString(id))));
+    }
+
+    @GetMapping("/info/all")
+    public ResponseEntity<?> getAllProduct(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getAllProduct(request)));
+    }
+
+    @GetMapping("/with-discount")
+    public ResponseEntity<?> getDiscountWithProduct(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getProductWithDiscount(request)));
+    }
 
 }
