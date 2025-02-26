@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "api-composition")
 public interface ApiClient {
 
-  @GetMapping("/discount-client/target/internal/discount-client/with-target")
-  ResponseEntity<?> getDiscountTargetWithTargetIdName(@RequestParam int page, @RequestParam int size);
+    @GetMapping("/discount-client/target")
+    ResponseEntity<?> getDiscountTargetWithTargetIdName(@RequestParam int page, @RequestParam int size);
 }
