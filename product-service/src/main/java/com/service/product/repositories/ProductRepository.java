@@ -28,5 +28,10 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
   @Query("""
       SELECT p FROM Product p WHERE p.categorie = :categorie
       """)
-  List<Product> findAllByCategorie(@Param("categorie") Categorie categorie);
+  Page<Product> findAllByCategorie(@Param("categorie") Categorie categorie, Pageable pageable);
+
+  @Query("""
+      SELECT p FROM Product p WHERE p.status != 'INACTIVE'
+      """)
+  Page<Product> findAllElseInactive(Pageable pageable);
 }

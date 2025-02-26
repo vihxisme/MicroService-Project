@@ -48,14 +48,14 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
         FROM ProductVariant pv
         JOIN pv.size s
         JOIN pv.color c
-        WHERE pv.product.id = :productId AND pv.color.id = :colorId
+        WHERE pv.product.id = :productId AND pv.color.id = :colorId AND pv.stock > 0
       """)
   List<SizeResource> findSizeByProductIdAndColor(@Param("productId") UUID productId, @Param("colorId") Integer colorId);
 
   @Query("""
       SELECT pv
       FROM ProductVariant pv
-      WHERE pv.product.id = :productId AND pv.color.id = :colorId
+      WHERE pv.product.id = :productId AND pv.color.id = :colorId AND pv.stock > 0
       """)
   List<ProductVariant> findAllByProductIdAndColor(@Param("productId") UUID productId,
       @Param("colorId") Integer colorId);

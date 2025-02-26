@@ -1,6 +1,6 @@
 package com.service.product.entities;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -48,6 +48,9 @@ public class ProductVariant {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "size_id", nullable = false)
   private Size size;
+
+  @Column(name = "stock", nullable = false, columnDefinition = "INT DEFAULT 0")
+  private int stock;
 
   @Column(name = "color_image_url", nullable = true)
   private String colorImageUrl;

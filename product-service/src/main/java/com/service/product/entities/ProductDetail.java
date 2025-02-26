@@ -1,6 +1,6 @@
 package com.service.product.entities;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 import org.hibernate.annotations.CreationTimestamp;
 
