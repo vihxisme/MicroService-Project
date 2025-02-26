@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 @Builder
-public class ColorResource {
+public class VarianClientResource {
   private final Integer id;
-  private final String name;
+
 }
