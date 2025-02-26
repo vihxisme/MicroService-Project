@@ -40,7 +40,7 @@ public class DiscountTypeController {
   }
 
   @DeleteMapping("/delete/{id}")
-  public ResponseEntity<?> deleteDiscountType0(@PathVariable Long id) {
+  public ResponseEntity<?> deleteDiscountType0(@PathVariable Integer id) {
     Boolean isType = discountTypeInterface.deleteDiscountType(id);
 
     return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", isType));

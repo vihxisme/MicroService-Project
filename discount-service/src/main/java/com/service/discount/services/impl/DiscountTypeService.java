@@ -50,7 +50,7 @@ public class DiscountTypeService implements DiscountTypeInterface {
 
   @Override
   @Transactional
-  public Boolean deleteDiscountType(Long id) {
+  public Boolean deleteDiscountType(Integer id) {
     Boolean isType = discountTypeRepository.deleteByIdCustom(id) > 0;
 
     if (isType) {

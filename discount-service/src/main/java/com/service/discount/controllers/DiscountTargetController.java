@@ -39,7 +39,7 @@ public class DiscountTargetController {
   }
 
   @DeleteMapping("/delete/{id}")
-  public ResponseEntity<?> deleteDiscountTarget(@PathVariable Long id) {
+  public ResponseEntity<?> deleteDiscountTarget(@PathVariable Integer id) {
     Boolean isDiscountTarget = discountTargetInterface.deleteDiscountTarget(id);
 
     return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", isDiscountTarget));
@@ -48,5 +48,13 @@ public class DiscountTargetController {
   @GetMapping("/info/all")
   public ResponseEntity<?> getAllDiscountTargets(@ModelAttribute PaginationRequest request) {
     return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTargetInterface.getAllDiscountTargets(request)));
+  }
+
+  @GetMapping("/info/target-names")
+  public ResponseEntity<?> getDiscountWithTargetName(@ModelAttribute PaginationRequest request) {
+    return ResponseEntity.ok(
+        new SuccessResponse<>(
+            "SUCCESS",
+            discountTargetInterface.getDiscountWithTargetName(request)));
   }
 }

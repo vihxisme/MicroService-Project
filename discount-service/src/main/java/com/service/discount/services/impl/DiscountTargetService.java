@@ -6,13 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.discount.entities.DiscountTarget;
 import com.service.discount.mappers.DiscountTargetMapper;
+import com.service.discount.repositories.ApiClient;
 import com.service.discount.repositories.DiscountTargetRepository;
 import com.service.discount.requests.PaginationRequest;
 import com.service.discount.requests.TargetRequest;
+import com.service.discount.resources.DiscountWithTargetNameResource;
 import com.service.discount.responses.PaginationResponse;
 import com.service.discount.services.interfaces.DiscountTargetInterface;
 
@@ -26,6 +31,12 @@ public class DiscountTargetService implements DiscountTargetInterface {
 
   @Autowired
   private DiscountTargetMapper discountTargetMapper;
+
+  @Autowired
+  private ApiClient apiClient;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Override
   @Transactional
@@ -63,7 +74,7 @@ public class DiscountTargetService implements DiscountTargetInterface {
 
   @Override
   @Transactional
-  public Boolean deleteDiscountTarget(Long id) {
+  public Boolean deleteDiscountTarget(Integer id) {
     Boolean isDiscountTarget = discountTargetRepository.deleteByIdCustom(id) > 0;
 
     if (!isDiscountTarget) {
@@ -86,6 +97,18 @@ public class DiscountTargetService implements DiscountTargetInterface {
         .totalPages(discountTargets.getTotalPages())
         .totalElements(discountTargets.getTotalElements())
         .build();
+  }
+
+  @Override
+  public PaginationResponse<DiscountWithTargetNameResource> getDiscountWithTargetName(PaginationRequest request) {
+    ResponseEntity<?> response = apiClient.getDiscountTargetWithTargetIdName(request.getPage(), request.getSize());
+
+    PaginationResponse<DiscountWithTargetNameResource> paginationResponse = objectMapper.convertValue(
+        response.getBody(),
+        new TypeReference<PaginationResponse<DiscountWithTargetNameResource>>() {
+        });
+
+    return paginationResponse;
   }
 
 }

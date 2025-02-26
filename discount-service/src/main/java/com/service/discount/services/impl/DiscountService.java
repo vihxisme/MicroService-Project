@@ -19,6 +19,7 @@ import com.service.discount.requests.DiscountRequest;
 import com.service.discount.requests.PaginationRequest;
 import com.service.discount.resources.DiscountClientResource;
 import com.service.discount.resources.DiscountResource;
+import com.service.discount.resources.DiscountWithTargetResource;
 import com.service.discount.responses.PaginationResponse;
 import com.service.discount.services.interfaces.DiscountInterface;
 
@@ -108,4 +109,33 @@ public class DiscountService implements DiscountInterface {
     return discountRepository.getAllDiscountsClient();
   }
 
+  @Override
+  public PaginationResponse<DiscountClientResource> getDiscountsWithTarget(PaginationRequest request) {
+    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+    Page<DiscountClientResource> discountsWithTarget = discountRepository.getDiscountsWithTarget(pageable);
+
+    return PaginationResponse.<DiscountClientResource>builder()
+        .content(discountsWithTarget.getContent())
+        .pageNumber(discountsWithTarget.getNumber())
+        .pageSize(discountsWithTarget.getSize())
+        .totalPages(discountsWithTarget.getTotalPages())
+        .totalElements(discountsWithTarget.getTotalElements())
+        .build();
+  }
+
+  @Override
+  public PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request) {
+    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+    Page<DiscountWithTargetResource> discountWithTargets = discountRepository.getDiscountWithTargets(pageable);
+
+    return PaginationResponse.<DiscountWithTargetResource>builder()
+        .content(discountWithTargets.getContent())
+        .pageNumber(discountWithTargets.getNumber())
+        .pageSize(discountWithTargets.getSize())
+        .totalPages(discountWithTargets.getTotalPages())
+        .totalElements(discountWithTargets.getTotalElements())
+        .build();
+  }
 }

@@ -11,7 +11,7 @@ public interface DiscountTypeInterface {
 
   DiscountType updateDiscountType(TypeRequest request);
 
-  Boolean deleteDiscountType(Long id);
+  Boolean deleteDiscountType(Integer id);
 
   List<TypeResource> getDiscountTypes();
 }
