@@ -21,7 +21,7 @@ public class Convert {
   private DiscountTypeRepository discountTypeRepository;
 
   @Named("idToDiscountType")
-  public DiscountType idToDiscountType(Long discountType) {
+  public DiscountType idToDiscountType(Integer discountType) {
     return discountTypeRepository.findById(discountType)
         .orElseThrow(() -> new RuntimeException("Discount type not found"));
   }

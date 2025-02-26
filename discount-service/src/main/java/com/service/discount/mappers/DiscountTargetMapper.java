@@ -20,6 +20,7 @@ public interface DiscountTargetMapper {
 
   @Mapping(target = "targetType", source = "targetType", qualifiedByName = "fromString")
   @Mapping(target = "discount", source = "discountId", qualifiedByName = "UUIDToDiscount")
+  @Mapping(target = "targetId", expression = "java(null)")
   DiscountTarget updateDiscountTargetFromRequest(TargetRequest request, @MappingTarget DiscountTarget discountTarget);
 
 }
