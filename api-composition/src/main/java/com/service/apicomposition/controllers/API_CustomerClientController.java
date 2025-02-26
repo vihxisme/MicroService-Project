@@ -3,6 +3,7 @@ package com.service.apicomposition.controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,8 @@ public class API_CustomerClientController {
   private Logger logger = LoggerFactory.getLogger(API_CustomerClientController.class);
 
   @Autowired
-  private final WebClient customerClient;
+  @Qualifier("customerWebClient")
+  private WebClient customerClient;
 
   @Autowired
   private WebClientExceptionHandler webClientExceptionHandler;
