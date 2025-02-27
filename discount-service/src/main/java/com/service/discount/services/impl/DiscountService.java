@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,113 +30,124 @@ import jakarta.transaction.Transactional;
 @Service
 public class DiscountService implements DiscountInterface {
 
-  @Autowired
-  private DiscountRepository discountRepository;
+    @Autowired
+    private DiscountRepository discountRepository;
 
-  @Autowired
-  private DiscountMapper discountMapper;
+    @Autowired
+    private DiscountMapper discountMapper;
 
-  private Logger logger = LoggerFactory.getLogger(DiscountService.class);
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
-  @Override
-  @Transactional
-  public Discount createDiscount(DiscountRequest request) {
-    if (request.getDiscountCode() == null) {
-      request.setDiscountCode(generateDiscountCode());
+    private Logger logger = LoggerFactory.getLogger(DiscountService.class);
+
+    @Override
+    @Transactional
+    public Discount createDiscount(DiscountRequest request) {
+        if (request.getDiscountCode() == null) {
+            request.setDiscountCode(generateDiscountCode());
+        }
+
+        Discount discount = discountMapper.toDiscount(request);
+        Discount savedDiscount = discountRepository.save(discount);
+
+        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
+
+        return savedDiscount;
     }
 
-    Discount discount = discountMapper.toDiscount(request);
+    @Override
+    @Transactional
+    public Discount updateDiscount(DiscountRequest request) {
+        Discount existDiscount = discountRepository.findById(request.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Discount not found"));
 
-    return discountRepository.save(discount);
-  }
+        discountMapper.updateDiscountFromRequest(request, existDiscount);
 
-  @Override
-  @Transactional
-  public Discount updateDiscount(DiscountRequest request) {
-    Discount existDiscount = discountRepository.findById(request.getId())
-        .orElseThrow(() -> new EntityNotFoundException("Discount not found"));
+        Discount savedDiscount = discountRepository.save(existDiscount);
 
-    discountMapper.updateDiscountFromRequest(request, existDiscount);
+        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
 
-    return discountRepository.save(existDiscount);
-  }
-
-  @Override
-  @Transactional
-  public Boolean deleteDiscount(UUID id) {
-    Boolean isDiscount = discountRepository.deleteByIdCustom(id) > 0;
-
-    if (isDiscount) {
-      return true;
-    } else {
-      throw new EntityNotFoundException("Discount not found");
+        return savedDiscount;
     }
-  }
 
-  @Override
-  public PaginationResponse<DiscountResource> getAllDiscounts(PaginationRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+    @Override
+    @Transactional
+    public Boolean deleteDiscount(UUID id) {
+        Discount existDiscount = discountRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Discount not found"));
 
-    Page<Discount> discounts = discountRepository.findAll(pageable);
+        discountRepository.delete(existDiscount);
 
-    Page<DiscountResource> discountResources = discounts.map(discountMapper::toDiscountResource);
+        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
 
-    return PaginationResponse.<DiscountResource>builder()
-        .content(discountResources.getContent())
-        .pageNumber(discountResources.getNumber())
-        .pageSize(discountResources.getSize())
-        .totalPages(discountResources.getTotalPages())
-        .totalElements(discountResources.getTotalElements())
-        .build();
-  }
+        return true;
+    }
 
-  public String generateDiscountCode() {
-    Boolean isUnique;
-    Random random = new Random();
-    String code;
-    do {
-      int randomNumberStart = random.nextInt(10, 99);
-      int randomNumberMiddle = random.nextInt(100, 999);
-      int randomNumberEnd = random.nextInt(100, 999);
-      code = String.format("%02d-%03d-%03d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
-      isUnique = !discountRepository.existsByDiscountCode(code);
-    } while (!isUnique);
+    @Override
+    public PaginationResponse<DiscountResource> getAllDiscounts(PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-    return code;
-  }
+        Page<Discount> discounts = discountRepository.findAll(pageable);
 
-  @Override
-  public List<DiscountClientResource> getAllDiscountsClient() {
-    return discountRepository.getAllDiscountsClient();
-  }
+        Page<DiscountResource> discountResources = discounts.map(discountMapper::toDiscountResource);
 
-  @Override
-  public PaginationResponse<DiscountClientResource> getDiscountsWithTarget(PaginationRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        return PaginationResponse.<DiscountResource>builder()
+                .content(discountResources.getContent())
+                .pageNumber(discountResources.getNumber())
+                .pageSize(discountResources.getSize())
+                .totalPages(discountResources.getTotalPages())
+                .totalElements(discountResources.getTotalElements())
+                .build();
+    }
 
-    Page<DiscountClientResource> discountsWithTarget = discountRepository.getDiscountsWithTarget(pageable);
+    public String generateDiscountCode() {
+        Boolean isUnique;
+        Random random = new Random();
+        String code;
+        do {
+            int randomNumberStart = random.nextInt(10, 99);
+            int randomNumberMiddle = random.nextInt(100, 999);
+            int randomNumberEnd = random.nextInt(100, 999);
+            code = String.format("%02d-%03d-%03d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
+            isUnique = !discountRepository.existsByDiscountCode(code);
+        } while (!isUnique);
 
-    return PaginationResponse.<DiscountClientResource>builder()
-        .content(discountsWithTarget.getContent())
-        .pageNumber(discountsWithTarget.getNumber())
-        .pageSize(discountsWithTarget.getSize())
-        .totalPages(discountsWithTarget.getTotalPages())
-        .totalElements(discountsWithTarget.getTotalElements())
-        .build();
-  }
+        return code;
+    }
 
-  @Override
-  public PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+    @Override
+    public List<DiscountClientResource> getAllDiscountsClient() {
+        return discountRepository.getAllDiscountsClient();
+    }
 
-    Page<DiscountWithTargetResource> discountWithTargets = discountRepository.getDiscountWithTargets(pageable);
+    @Override
+    public PaginationResponse<DiscountClientResource> getDiscountsWithTarget(PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-    return PaginationResponse.<DiscountWithTargetResource>builder()
-        .content(discountWithTargets.getContent())
-        .pageNumber(discountWithTargets.getNumber())
-        .pageSize(discountWithTargets.getSize())
-        .totalPages(discountWithTargets.getTotalPages())
-        .totalElements(discountWithTargets.getTotalElements())
-        .build();
-  }
+        Page<DiscountClientResource> discountsWithTarget = discountRepository.getDiscountsWithTarget(pageable);
+
+        return PaginationResponse.<DiscountClientResource>builder()
+                .content(discountsWithTarget.getContent())
+                .pageNumber(discountsWithTarget.getNumber())
+                .pageSize(discountsWithTarget.getSize())
+                .totalPages(discountsWithTarget.getTotalPages())
+                .totalElements(discountsWithTarget.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+        Page<DiscountWithTargetResource> discountWithTargets = discountRepository.getDiscountWithTargets(pageable);
+
+        return PaginationResponse.<DiscountWithTargetResource>builder()
+                .content(discountWithTargets.getContent())
+                .pageNumber(discountWithTargets.getNumber())
+                .pageSize(discountWithTargets.getSize())
+                .totalPages(discountWithTargets.getTotalPages())
+                .totalElements(discountWithTargets.getTotalElements())
+                .build();
+    }
 }

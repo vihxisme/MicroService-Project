@@ -30,4 +30,8 @@ public interface ProductInterface {
     PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request);
 
     PaginationResponse<ProductWithDiscountResource> getProductWithDiscount(PaginationRequest request);
+
+    PaginationResponse<ProductWithDiscountResource> getProductWithDiscountByCategorie(String categorieId, PaginationRequest request);
+
+    PaginationResponse<ProductWithDiscountResource> getOnlyProductDiscount(PaginationRequest request);
 }

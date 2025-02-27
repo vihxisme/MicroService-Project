@@ -25,28 +25,28 @@ import com.service.discount.services.interfaces.DiscountInterface;
 @RequestMapping("/v1/discount")
 public class DiscountController {
 
-  @Autowired
-  private DiscountInterface discountInterface;
+    @Autowired
+    private DiscountInterface discountInterface;
 
-  private Logger logger = LoggerFactory.getLogger(DiscountController.class);
+    private Logger logger = LoggerFactory.getLogger(DiscountController.class);
 
-  @PostMapping("/create")
-  public ResponseEntity<?> createDiscount(@RequestBody DiscountRequest request) {
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.createDiscount(request)));
-  }
+    @PostMapping("/create")
+    public ResponseEntity<?> createDiscount(@RequestBody DiscountRequest request) {
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.createDiscount(request)));
+    }
 
-  @PutMapping("/update")
-  public ResponseEntity<?> updateDiscount(@RequestBody DiscountRequest request) {
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.updateDiscount(request)));
-  }
+    @PutMapping("/update")
+    public ResponseEntity<?> updateDiscount(@RequestBody DiscountRequest request) {
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.updateDiscount(request)));
+    }
 
-  @DeleteMapping("/delete/{id}")
-  public ResponseEntity<?> deleteDiscount(@PathVariable String id) {
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.deleteDiscount(UUID.fromString(id))));
-  }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteDiscount(@PathVariable String id) {
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.deleteDiscount(UUID.fromString(id))));
+    }
 
-  @GetMapping("/info/all")
-  public ResponseEntity<?> getAllDiscounts(@ModelAttribute PaginationRequest request) {
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.getAllDiscounts(request)));
-  }
+    @GetMapping("/info/all")
+    public ResponseEntity<?> getAllDiscounts(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountInterface.getAllDiscounts(request)));
+    }
 }

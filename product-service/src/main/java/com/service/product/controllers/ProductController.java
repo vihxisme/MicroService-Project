@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.service.product.requests.PaginationRequest;
@@ -59,11 +60,27 @@ public class ProductController {
     }
 
     @GetMapping("/with-discount")
-    public ResponseEntity<?> getDiscountWithProduct(@ModelAttribute PaginationRequest request) {
+    public ResponseEntity<?> getProductWithDiscount(@ModelAttribute PaginationRequest request) {
         return ResponseEntity.ok(
                 new SuccessResponse<>(
                         "SUCCESS",
                         productInterface.getProductWithDiscount(request)));
+    }
+
+    @GetMapping("/by-categorie")
+    public ResponseEntity<?> getProductWithDiscountbyCategorie(@RequestParam String categorieId, @ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getProductWithDiscountByCategorie(categorieId, request)));
+    }
+
+    @GetMapping("/only-discount")
+    public ResponseEntity<?> getOnlyProductDiscount(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getOnlyProductDiscount(request)));
     }
 
 }

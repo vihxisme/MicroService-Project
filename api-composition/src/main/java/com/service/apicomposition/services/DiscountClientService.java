@@ -140,7 +140,7 @@ public class DiscountClientService {
     }
 
     public Mono<PaginationResponse<DiscountWithTargetNameResource>> getDiscountTargetWithProductClient(PaginationRequest request) {
-        String cacheKey = String.format("DiscountTarget_%d_%d", request.getPage(), request.getSize());
+        String cacheKey = String.format("discount:target:%d_%d", request.getPage(), request.getSize());
         final long DURATION_TTL = 3600;
 
         logger.error("cacheKey: " + cacheKey);

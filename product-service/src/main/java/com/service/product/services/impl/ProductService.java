@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -50,6 +51,9 @@ public class ProductService implements ProductInterface {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     @Override
     @Transactional
     public Product createProduct(ProductRequest request) {
@@ -58,8 +62,11 @@ public class ProductService implements ProductInterface {
         }
 
         Product product = productMapper.toProduct(request);
+        Product savedProduct = productRepository.save(product);
 
-        return productRepository.save(product);
+        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
+
+        return savedProduct;
     }
 
     @Override
@@ -69,8 +76,11 @@ public class ProductService implements ProductInterface {
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         productMapper.updateProductFromRequest(request, existProduct);
+        Product savedProduct = productRepository.save(existProduct);
 
-        return productRepository.save(existProduct);
+        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
+
+        return savedProduct;
     }
 
     @Override
@@ -80,6 +90,8 @@ public class ProductService implements ProductInterface {
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         productRepository.delete(existProduct);
+
+        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
 
         return true;
     }
@@ -173,12 +185,35 @@ public class ProductService implements ProductInterface {
     public PaginationResponse<ProductWithDiscountResource> getProductWithDiscount(PaginationRequest request) {
         ResponseEntity<?> resource = apiClient.getProductWithDiscount(request.getPage(), request.getSize());
 
-        PaginationResponse<ProductWithDiscountResource> productWPaginationResponse = objectMapper.convertValue(
+        PaginationResponse<ProductWithDiscountResource> paginationResponse = objectMapper.convertValue(
                 resource.getBody(),
                 new TypeReference<PaginationResponse<ProductWithDiscountResource>>() {
         });
 
-        return productWPaginationResponse;
+        return paginationResponse;
+    }
+
+    @Override
+    public PaginationResponse<ProductWithDiscountResource> getProductWithDiscountByCategorie(String categorieId,
+            PaginationRequest request) {
+        ResponseEntity<?> response = apiClient.getProductWithDiscountByCategorie(categorieId, request.getPage(), request.getSize());
+
+        PaginationResponse<ProductWithDiscountResource> paginationResponse = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        });
+
+        return paginationResponse;
+    }
+
+    @Override
+    public PaginationResponse<ProductWithDiscountResource> getOnlyProductDiscount(PaginationRequest request) {
+        ResponseEntity<?> response = apiClient.getOnlyProductDiscount(request.getPage(), request.getSize());
+
+        PaginationResponse<ProductWithDiscountResource> paginationResponse = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        });
+
+        return paginationResponse;
     }
 
 }
