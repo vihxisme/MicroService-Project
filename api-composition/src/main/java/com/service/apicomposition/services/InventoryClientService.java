@@ -276,8 +276,6 @@ public class InventoryClientService {
     public Mono<PaginationResponse<InventoryProdResource>> getInventoryWithProduct(PaginationRequest request) {
         String cacheKey = String.format("inven:prod:%d:%d", request.getPage(), request.getSize());
 
-        logger.info("ps");
-
         return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<InventoryProdResource>>() {
         })
                 .switchIfEmpty(fetchInventoryWithProduct(fetchInventoryPageMono("/internal/inventory", request.getPage(), request.getSize())))
