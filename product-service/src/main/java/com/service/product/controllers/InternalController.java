@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.service.product.requests.PaginationRequest;
 import com.service.product.services.interfaces.CategorieInterface;
 import com.service.product.services.interfaces.ProductInterface;
+import com.service.product.services.interfaces.ProductVariantInterface;
 
 @RestController
 @RequestMapping("/internal")
@@ -24,6 +25,9 @@ public class InternalController {
 
     @Autowired
     private CategorieInterface categorieInterface;
+
+    @Autowired
+    private ProductVariantInterface productVariantInterface;
 
     @GetMapping("/products/list")
     public ResponseEntity<?> getAllProductElseInactive(@ModelAttribute PaginationRequest request) {
@@ -44,6 +48,11 @@ public class InternalController {
     @GetMapping("/categorie-names")
     public ResponseEntity<?> getCategorieName(@RequestParam List<UUID> categorieIds) {
         return ResponseEntity.ok(categorieInterface.getCategorieName(categorieIds));
+    }
+
+    @GetMapping("/prod-variant")
+    public ResponseEntity<?> getProdVariantById(@RequestParam List<Integer> variantIds) {
+        return ResponseEntity.ok(productVariantInterface.getProdVariantById(variantIds));
     }
 
 }

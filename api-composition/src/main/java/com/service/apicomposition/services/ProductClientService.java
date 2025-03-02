@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,7 @@ import com.service.apicomposition.mappers.ProductDiscountMapper;
 import com.service.apicomposition.requests.PaginationRequest;
 import com.service.apicomposition.resources.DiscountClientResource;
 import com.service.apicomposition.resources.ProductClientResource;
-import com.service.apicomposition.resources.ProductWithDiscountResource;
+import com.service.apicomposition.resources.ProdWithDiscountResource;
 import com.service.apicomposition.responses.PaginationResponse;
 
 import reactor.core.publisher.Mono;
@@ -83,7 +82,7 @@ public class ProductClientService {
     }
 
     // tổng hợp dữ liệu lấy được từ product-service và discount-service
-    private Mono<PaginationResponse<ProductWithDiscountResource>> fetchProductsWithDiscount(
+    private Mono<PaginationResponse<ProdWithDiscountResource>> fetchProductsWithDiscount(
             Mono<PaginationResponse<ProductClientResource>> productPageMono,
             Mono<List<DiscountClientResource>> discountListMono) {
 
@@ -93,7 +92,7 @@ public class ProductClientService {
                     List<DiscountClientResource> discountList = tuple.getT2();
 
                     // Lọc giảm giá phù hợp với từng sản phẩm
-                    List<ProductWithDiscountResource> combinedList = productPage.getContent()
+                    List<ProdWithDiscountResource> combinedList = productPage.getContent()
                             .stream()
                             .map(product -> {
                                 DiscountClientResource discount = discountList.stream()
@@ -124,7 +123,7 @@ public class ProductClientService {
                             .toList();
 
                     // Tạo PaginationResponse mới giữ nguyên thông tin phân trang
-                    return PaginationResponse.<ProductWithDiscountResource>builder()
+                    return PaginationResponse.<ProdWithDiscountResource>builder()
                             .content(combinedList)
                             .pageNumber(productPage.getPageNumber())
                             .pageSize(productPage.getPageSize())
@@ -137,7 +136,7 @@ public class ProductClientService {
 
     }
 
-    private Mono<PaginationResponse<ProductWithDiscountResource>> fetchProductandDiscount(
+    private Mono<PaginationResponse<ProdWithDiscountResource>> fetchProductandDiscount(
             Mono<PaginationResponse<ProductClientResource>> productPageMono,
             Mono<List<DiscountClientResource>> discountListMono) {
 
@@ -147,7 +146,7 @@ public class ProductClientService {
                     List<DiscountClientResource> discountList = tuple.getT2();
 
                     // Lọc giảm giá phù hợp với từng sản phẩm
-                    List<ProductWithDiscountResource> combinedList = productPage.getContent()
+                    List<ProdWithDiscountResource> combinedList = productPage.getContent()
                             .stream()
                             .map(product -> {
                                 DiscountClientResource discount = discountList.stream()
@@ -168,7 +167,7 @@ public class ProductClientService {
                             .toList();
 
                     // Tạo PaginationResponse mới giữ nguyên thông tin phân trang nhưng cập nhật số lượng phần tử
-                    return PaginationResponse.<ProductWithDiscountResource>builder()
+                    return PaginationResponse.<ProdWithDiscountResource>builder()
                             .content(combinedList)
                             .pageNumber(productPage.getPageNumber())
                             .pageSize(productPage.getPageSize())
@@ -181,11 +180,11 @@ public class ProductClientService {
     }
 
     // lấy ra danh sách product từ redis, nếu không có trong redis sẽ call api để tổng hợp dữ liệu để đẩy lên redis
-    public Mono<PaginationResponse<ProductWithDiscountResource>> getProductWithDiscount(PaginationRequest request) {
-        String cacheKey = String.format("prod:discount:%d_%d", request.getPage(), request.getSize());
+    public Mono<PaginationResponse<ProdWithDiscountResource>> getProductWithDiscount(PaginationRequest request) {
+        String cacheKey = String.format("prod:discount:%d:%d", request.getPage(), request.getSize());
         final long DURATION_TTL = 3600;
 
-        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<ProdWithDiscountResource>>() {
         })
                 .switchIfEmpty(fetchProductsWithDiscount(
                         fetchProductPageMono("/internal/products/list", request.getPage(), request.getSize()),
@@ -196,11 +195,11 @@ public class ProductClientService {
     }
 
     // lấy danh sách product thuộc nhóm categorie từ redis, nếu không có trong redis sẽ call api để tổng hợp dữ liệu để đẩy lên redis
-    public Mono<PaginationResponse<ProductWithDiscountResource>> getProductWithDiscountByCategorie(String categorieId, PaginationRequest request) {
+    public Mono<PaginationResponse<ProdWithDiscountResource>> getProductWithDiscountByCategorie(String categorieId, PaginationRequest request) {
         String cacheKey = String.format("prod:discount:cat:%s:%d:%d", categorieId, request.getPage(), request.getSize());
         final long DURATION_TTL = 3600;
 
-        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<ProdWithDiscountResource>>() {
         })
                 .switchIfEmpty(fetchProductsWithDiscount(
                         fetchProductPageMonoByCategorie("/internal/products/categorie", categorieId, request.getPage(), request.getSize()),
@@ -210,20 +209,20 @@ public class ProductClientService {
     }
 
     // lấy danh sách products có khuyến mãi từ redis, nếu không có trong redis sẽ call api để tổng hợp dữ liệu để đẩy lên redis
-    public Mono<PaginationResponse<ProductWithDiscountResource>> getOnlyProductWithDiscount(PaginationRequest request) {
+    public Mono<PaginationResponse<ProdWithDiscountResource>> getOnlyProductWithDiscount(PaginationRequest request) {
         String cacheKey = String.format("only:prod:discount:%d:%d", request.getPage(), request.getSize());
         final long DURATION_TTL = 3600;
 
-        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<ProdWithDiscountResource>>() {
         })
                 .switchIfEmpty(fetchDiscountedProductsRecursive(request.getPage(), request.getSize(), new ArrayList<>()))
                 .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data));
     }
 
-    private Mono<PaginationResponse<ProductWithDiscountResource>> fetchDiscountedProductsRecursive(
+    private Mono<PaginationResponse<ProdWithDiscountResource>> fetchDiscountedProductsRecursive(
             int page,
             int size,
-            List<ProductWithDiscountResource> accumulatedProducts) {
+            List<ProdWithDiscountResource> accumulatedProducts) {
         if (accumulatedProducts.size() >= size) {
             return Mono.just(new PaginationResponse<>(
                     accumulatedProducts.subList(0, size), page, size, 1, accumulatedProducts.size()
@@ -235,7 +234,7 @@ public class ProductClientService {
 
         return fetchProductandDiscount(productPageMono, discountListMono)
                 .flatMap(paginationResponse -> {
-                    List<ProductWithDiscountResource> filteredProducts = paginationResponse.getContent();
+                    List<ProdWithDiscountResource> filteredProducts = paginationResponse.getContent();
                     accumulatedProducts.addAll(filteredProducts);
 
                     if (paginationResponse.getContent().isEmpty()) {

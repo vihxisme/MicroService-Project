@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.apicomposition.enums.TargetTypeEnum;
 import com.service.apicomposition.mappers.DiscountClientMapper;
 import com.service.apicomposition.requests.PaginationRequest;
-import com.service.apicomposition.resources.DiscountWithTarget;
+import com.service.apicomposition.resources.DiscountWithTargetResource;
 import com.service.apicomposition.resources.DiscountWithTargetNameResource;
 import com.service.apicomposition.responses.PaginationResponse;
 
@@ -52,7 +52,7 @@ public class DiscountClientService {
     private Logger logger = LoggerFactory.getLogger(DiscountClientService.class);
 
     // lấy danh sách discount-target từ discount-service với {size} bản ghi
-    private Mono<PaginationResponse<DiscountWithTarget>> fetchDiscountListMono(String path, int page, int size) {
+    private Mono<PaginationResponse<DiscountWithTargetResource>> fetchDiscountListMono(String path, int page, int size) {
         return discountClient.get()
                 .uri(uriBuilder -> uriBuilder
                 .path(path)
@@ -60,18 +60,18 @@ public class DiscountClientService {
                 .queryParam("size", size)
                 .build())
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<PaginationResponse<DiscountWithTarget>>() {
+                .bodyToMono(new ParameterizedTypeReference<PaginationResponse<DiscountWithTargetResource>>() {
                 });
     }
 
     // Request lấy tên sản phẩm từ targetId
-    private Mono<Map<UUID, String>> productNamesMono(List<DiscountWithTarget> discountList, String path) {
+    private Mono<Map<UUID, String>> productNamesMono(List<DiscountWithTargetResource> discountList, String path) {
         return discountList.isEmpty() ? Mono.just(Collections.emptyMap())
                 : productClient.get()
                         .uri(uriBuilder -> uriBuilder.path(path)
                         .queryParam("productIds", discountList.stream()
                                 .filter(d -> TargetTypeEnum.PRODUCT.toString().equals(d.getTargetType()))
-                                .map(DiscountWithTarget::getTargetId)
+                                .map(DiscountWithTargetResource::getTargetId)
                                 .collect(Collectors.toList()))
                         .build())
                         .retrieve()
@@ -80,13 +80,13 @@ public class DiscountClientService {
     }
 
     // Request lấy tên danh mục từ targetId
-    private Mono<Map<UUID, String>> categoryNamesMono(List<DiscountWithTarget> discountList, String path) {
+    private Mono<Map<UUID, String>> categoryNamesMono(List<DiscountWithTargetResource> discountList, String path) {
         return discountList.isEmpty() ? Mono.just(Collections.emptyMap())
                 : productClient.get()
                         .uri(uriBuilder -> uriBuilder.path(path)
                         .queryParam("categorieIds", discountList.stream()
                                 .filter(d -> TargetTypeEnum.CATEGORIE.toString().equals(d.getTargetType()))
-                                .map(DiscountWithTarget::getTargetId)
+                                .map(DiscountWithTargetResource::getTargetId)
                                 .collect(Collectors.toList()))
                         .build())
                         .retrieve()
@@ -95,11 +95,11 @@ public class DiscountClientService {
     }
 
     private Mono<PaginationResponse<DiscountWithTargetNameResource>> fetchDiscountTargetWithProductClient(
-            Mono<PaginationResponse<DiscountWithTarget>> discountListMono) {
+            Mono<PaginationResponse<DiscountWithTargetResource>> discountListMono) {
 
         return discountListMono.flatMap(discountPage -> {
             // Lấy danh sách phân trang
-            List<DiscountWithTarget> discountList = discountPage.getContent();
+            List<DiscountWithTargetResource> discountList = discountPage.getContent();
 
             // Tạo request lấy tên sản phẩm và danh mục
             Mono<Map<UUID, String>> productNamesMono = productNamesMono(discountList, "/internal/product-names");

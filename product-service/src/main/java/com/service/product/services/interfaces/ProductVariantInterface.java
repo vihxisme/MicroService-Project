@@ -7,20 +7,24 @@ import com.service.product.entities.ProductVariant;
 import com.service.product.requests.ProductVariantRequest;
 import com.service.product.requests.VariantRequest;
 import com.service.product.resources.ColorResource;
+import com.service.product.resources.ProdVariantResource;
 import com.service.product.resources.SizeResource;
 
 public interface ProductVariantInterface {
-  List<ProductVariant> createProductVariant(ProductVariantRequest request, VariantRequest variantRequest);
 
-  ProductVariant updateProductVariant(ProductVariantRequest request);
+    List<ProductVariant> createProductVariant(ProductVariantRequest request, VariantRequest variantRequest);
 
-  Boolean deleteProductVariant(Integer id);
+    ProductVariant updateProductVariant(ProductVariantRequest request);
 
-  List<SizeResource> getSizesFromVariant(UUID productId);
+    Boolean deleteProductVariant(Integer id);
 
-  List<ColorResource> getColorsFromVariant(UUID productId);
+    List<SizeResource> getSizesFromVariant(UUID productId);
 
-  List<SizeResource> getSizeFromVariantForProduct(UUID productId, Integer colorId);
+    List<ColorResource> getColorsFromVariant(UUID productId);
 
-  List<ProductVariant> getVariantByProductIdAndColorId(UUID productId, Integer colorId);
+    List<SizeResource> getSizeFromVariantForProduct(UUID productId, Integer colorId);
+
+    List<ProductVariant> getVariantByProductIdAndColorId(UUID productId, Integer colorId);
+
+    List<ProdVariantResource> getProdVariantById(List<Integer> ids);
 }

@@ -11,14 +11,15 @@ import org.springframework.stereotype.Repository;
 
 import com.service.product.entities.ProductVariant;
 import com.service.product.resources.ColorResource;
+import com.service.product.resources.ProdVariantResource;
 import com.service.product.resources.SizeResource;
 
 @Repository
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, Integer> {
 
-  Optional<ProductVariant> findByProductIdAndColorIdAndSizeId(UUID productId, Integer colorId, Integer sizeId);
+    Optional<ProductVariant> findByProductIdAndColorIdAndSizeId(UUID productId, Integer colorId, Integer sizeId);
 
-  @Query("""
+    @Query("""
       SELECT DISTINCT new com.service.product.resources.ColorResource(
         c.id,
         c.name
@@ -27,9 +28,9 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
         JOIN pv.color c
         WHERE pv.product.id = :productId
       """)
-  List<ColorResource> findDistinctColorsByProductId(@Param("productId") UUID productId);
+    List<ColorResource> findDistinctColorsByProductId(@Param("productId") UUID productId);
 
-  @Query("""
+    @Query("""
       SELECT DISTINCT new com.service.product.resources.SizeResource(
         s.id,
         s.name
@@ -38,9 +39,9 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
         JOIN pv.size s
         WHERE pv.product.id = :productId
       """)
-  List<SizeResource> findDistinctSizesByProductId(@Param("productId") UUID productId);
+    List<SizeResource> findDistinctSizesByProductId(@Param("productId") UUID productId);
 
-  @Query("""
+    @Query("""
       SELECT DISTINCT new com.service.product.resources.SizeResource(
         s.id,
         s.name
@@ -50,13 +51,29 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
         JOIN pv.color c
         WHERE pv.product.id = :productId AND pv.color.id = :colorId AND pv.stock > 0
       """)
-  List<SizeResource> findSizeByProductIdAndColor(@Param("productId") UUID productId, @Param("colorId") Integer colorId);
+    List<SizeResource> findSizeByProductIdAndColor(@Param("productId") UUID productId, @Param("colorId") Integer colorId);
 
-  @Query("""
+    @Query("""
       SELECT pv
       FROM ProductVariant pv
       WHERE pv.product.id = :productId AND pv.color.id = :colorId AND pv.stock > 0
       """)
-  List<ProductVariant> findAllByProductIdAndColor(@Param("productId") UUID productId,
-      @Param("colorId") Integer colorId);
+    List<ProductVariant> findAllByProductIdAndColor(@Param("productId") UUID productId,
+            @Param("colorId") Integer colorId);
+
+    @Query("""
+          SELECT new com.service.product.resources.ProdVariantResource(
+            pv.id,
+            c.id,
+            c.name,
+            s.id,
+            s.name
+          )
+          FROM
+            ProductVariant pv
+            JOIN pv.color c
+            JOIN pv.size s
+          WHERE pv.id IN :ids
+          """)
+    List<ProdVariantResource> findProdVariantById(@Param("ids") List<Integer> ids);
 }
