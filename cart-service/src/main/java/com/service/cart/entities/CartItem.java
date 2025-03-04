@@ -8,6 +8,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -35,13 +37,14 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
     @JdbcTypeCode(SqlTypes.BINARY)
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @Column(name = "product_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID productId;
 
     @Column(name = "prod_variant_id", nullable = false)
     private Integer prodVariantId;
