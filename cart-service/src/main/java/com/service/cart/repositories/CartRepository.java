@@ -10,4 +10,6 @@ import com.service.cart.entities.Cart;
 @Repository
 public interface CartRepository extends JpaRepository<Cart, UUID> {
 
+    boolean existsByCartCode(String code);
+
 }
