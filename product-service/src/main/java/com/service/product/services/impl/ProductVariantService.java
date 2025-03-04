@@ -36,21 +36,25 @@ public class ProductVariantService implements ProductVariantInterface {
 
     @Override
     @Transactional
-    public List<ProductVariant> createProductVariant(ProductVariantRequest request, VariantRequest variantRequest) {
-        if (variantRequest.getColorIds().length != variantRequest.getSizeIds().length
-                || variantRequest.getColorIds().length != variantRequest.getColorImageUrls().length) {
-            throw new IllegalArgumentException("VariantRequest invalid");
-        }
-
+    public List<ProductVariant> createProductVariant(VariantRequest request) {
         List<ProductVariant> productVariantList = new ArrayList<>();
 
-        for (int i = 0; i < variantRequest.getColorIds().length; i++) {
-            request.setColorId(variantRequest.getColorIds()[i]);
-            request.setColorImageUrl(variantRequest.getColorImageUrls()[i]);
-            for (Integer size : variantRequest.getSizeIds()) {
-                request.setSizeId(size);
+        logger.info("color: " + request.getColorIds().size());
+        logger.info("size: " + request.getSizeIds().size());
+        logger.info("image: " + request.getColorImageUrls().size());
 
-                ProductVariant productVariant = productVariantMapper.toProductVariant(request);
+        for (Integer i = 0; i < request.getColorIds().size(); i++) {
+            String colorImage = (i < request.getColorImageUrls().size() && request.getColorImageUrls().get(i) != null)
+                    ? request.getColorImageUrls().get(i) : null;
+            logger.info("colorImage: " + colorImage);
+            for (Integer size : request.getSizeIds()) {
+                ProductVariantRequest productVariantRequest = ProductVariantRequest.builder()
+                        .productId(request.getProductId())
+                        .colorId(request.getColorIds().get(i))
+                        .sizeId(size)
+                        .colorImageUrl(colorImage)
+                        .build();
+                ProductVariant productVariant = productVariantMapper.toProductVariant(productVariantRequest);
 
                 productVariantList.add(productVariant);
             }

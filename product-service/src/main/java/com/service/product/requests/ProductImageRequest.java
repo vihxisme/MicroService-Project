@@ -14,7 +14,8 @@ import lombok.Setter;
 @Setter
 @Builder
 public class ProductImageRequest {
-  private Integer id;
-  private UUID productId;
-  private String imageUrl;
+
+    private Integer id;
+    private UUID productId;
+    private String imageUrl;
 }

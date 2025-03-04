@@ -30,36 +30,38 @@ import lombok.Setter;
 @Setter
 @Builder
 public class ProductVariant {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
 
-  @JsonBackReference
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "product_id", nullable = false)
-  private Product product;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-  @JsonBackReference
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "color_id", nullable = false)
-  private Color color;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
-  @JsonBackReference
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "size_id", nullable = false)
-  private Size size;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "color_id", nullable = false)
+    private Color color;
 
-  @Column(name = "stock", nullable = false, columnDefinition = "INT DEFAULT 0")
-  private int stock;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "size_id", nullable = false)
+    private Size size;
 
-  @Column(name = "color_image_url", nullable = true)
-  private String colorImageUrl;
+    @Builder.Default
+    @Column(name = "stock", nullable = false, columnDefinition = "Integer DEFAULT 0")
+    private Integer stock = 0;
 
-  @CreationTimestamp
-  @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
-  private Timestamp createdAt;
+    @Column(name = "color_image_url", nullable = true)
+    private String colorImageUrl;
 
-  @UpdateTimestamp
-  @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = true)
-  private Timestamp updatedAt;
+    @CreationTimestamp
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
+    private Timestamp createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = true)
+    private Timestamp updatedAt;
 }

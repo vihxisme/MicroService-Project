@@ -12,7 +12,7 @@ import com.service.product.resources.SizeResource;
 
 public interface ProductVariantInterface {
 
-    List<ProductVariant> createProductVariant(ProductVariantRequest request, VariantRequest variantRequest);
+    List<ProductVariant> createProductVariant(VariantRequest request);
 
     ProductVariant updateProductVariant(ProductVariantRequest request);
 

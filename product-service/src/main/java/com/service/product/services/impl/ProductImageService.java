@@ -6,6 +6,10 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,75 +27,88 @@ import jakarta.transaction.Transactional;
 @Service
 public class ProductImageService implements ProductImageInterface {
 
-  @Autowired
-  private ProductImageRepository productImageRepository;
+    @Autowired
+    private ProductImageRepository productImageRepository;
 
-  @Autowired
-  private ProductRepository productRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
-  @Autowired
-  private ProductImageMapper productImageMapper;
+    @Autowired
+    private ProductImageMapper productImageMapper;
 
-  private Logger logger = LoggerFactory.getLogger(ProductImageService.class);
+    private Logger logger = LoggerFactory.getLogger(ProductImageService.class);
 
-  @Override
-  @Transactional
-  public List<ProductImage> createProductImage(List<ProductImageRequest> requests) {
-    if (requests == null || requests.isEmpty())
-      throw new IllegalArgumentException("List of requests cannot be null or empty");
-
-    List<ProductImage> productImages = new ArrayList<>();
-
-    for (ProductImageRequest request : requests) {
-      ProductImage productImage = productImageMapper.toProductImgage(request);
-      productImages.add(productImage);
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "create-prod-images", durable = "true"),
+            exchange = @Exchange(name = "create-prod-images-exchange", type = "direct"),
+            key = "create-prod-images"
+    ))
+    public void createProdImageListener(List<ProductImageRequest> requests) {
+        createProductImage(requests);
     }
 
-    return productImageRepository.saveAll(productImages);
-  }
+    @Override
+    @Transactional
+    public List<ProductImage> createProductImage(List<ProductImageRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("List of requests cannot be null or empty");
+        }
 
-  @Override
-  @Transactional
-  public List<ProductImage> updateProductImage(List<ProductImageRequest> requests) {
-    if (requests == null || requests.isEmpty())
-      throw new IllegalArgumentException("List of requests cannot be null or empty");
+        List<ProductImage> productImages = new ArrayList<>();
 
-    List<ProductImage> existProductImages = new ArrayList<>();
+        for (ProductImageRequest request : requests) {
+            ProductImage productImage = productImageMapper.toProductImgage(request);
+            productImages.add(productImage);
+        }
 
-    for (ProductImageRequest request : requests) {
-      ProductImage productImage = productImageRepository.findById(request.getId())
-          .orElseThrow(() -> new EntityNotFoundException("ProductImage not found"));
-
-      productImageMapper.updateProductImageFromRequest(request, productImage);
-
-      existProductImages.add(productImage);
+        return productImageRepository.saveAll(productImages);
     }
 
-    return productImageRepository.saveAll(existProductImages);
-  }
+    @Override
+    @Transactional
+    public List<ProductImage> updateProductImage(List<ProductImageRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("List of requests cannot be null or empty");
+        }
 
-  @Override
-  @Transactional
-  public Boolean deleteProductImage(List<Integer> ids) {
-    if (ids == null || ids.isEmpty())
-      throw new IllegalArgumentException("List of requests cannot be null of empty");
+        List<ProductImage> existProductImages = new ArrayList<>();
 
-    List<ProductImage> existProductImages = productImageRepository.findAllById(ids);
+        for (ProductImageRequest request : requests) {
+            ProductImage productImage = productImageRepository.findById(request.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("ProductImage not found"));
 
-    if (existProductImages.size() != ids.size())
-      throw new EntityNotFoundException("ProductImage not found");
+            productImageMapper.updateProductImageFromRequest(request, productImage);
 
-    productImageRepository.deleteAll(existProductImages);
+            existProductImages.add(productImage);
+        }
 
-    return true;
-  }
+        return productImageRepository.saveAll(existProductImages);
+    }
 
-  @Override
-  public List<ProductImage> getProductImageByProduct(UUID productId) {
-    Product product = productRepository.findById(productId)
-        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+    @Override
+    @Transactional
+    public Boolean deleteProductImage(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException("List of requests cannot be null of empty");
+        }
 
-    return productImageRepository.findByProduct(product);
-  }
+        List<ProductImage> existProductImages = productImageRepository.findAllById(ids);
+
+        if (existProductImages.size() != ids.size()) {
+            throw new EntityNotFoundException("ProductImage not found");
+        }
+
+        productImageRepository.deleteAll(existProductImages);
+
+        return true;
+    }
+
+    @Override
+    public List<ProductImage> getProductImageByProduct(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        return productImageRepository.findByProduct(product);
+    }
 
 }

@@ -6,6 +6,10 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,82 +27,91 @@ import jakarta.transaction.Transactional;
 @Service
 public class ProductDetailService implements ProductDetailInterface {
 
-  @Autowired
-  private ProductDetailRepository productDetailRepository;
+    @Autowired
+    private ProductDetailRepository productDetailRepository;
 
-  @Autowired
-  private ProductRepository productRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
-  @Autowired
-  private ProductDetailMapper productDetailMapper;
+    @Autowired
+    private ProductDetailMapper productDetailMapper;
 
-  private Logger logger = LoggerFactory.getLogger(ProductDetailService.class);
+    private Logger logger = LoggerFactory.getLogger(ProductDetailService.class);
 
-  @Override
-  @Transactional
-  public List<ProductDetail> createProductDetailList(List<ProductDetailRequest> requests) {
-    if (requests == null || requests.isEmpty()) {
-      throw new IllegalArgumentException("List of requests cannot be null or empty");
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "create-prod-details", durable = "true"),
+            exchange = @Exchange(name = "create-prod-details-exchange", type = "direct"),
+            key = "create-prod-details"
+    ))
+    public void createProdDetailListener(List<ProductDetailRequest> requests) {
+        createProductDetailList(requests);
     }
 
-    List<ProductDetail> productDetails = new ArrayList<>();
+    @Override
+    @Transactional
+    public List<ProductDetail> createProductDetailList(List<ProductDetailRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("List of requests cannot be null or empty");
+        }
 
-    for (ProductDetailRequest request : requests) {
-      ProductDetail productDetail = productDetailMapper.toProductDetail(request);
-      productDetails.add(productDetail);
+        List<ProductDetail> productDetails = new ArrayList<>();
+
+        for (ProductDetailRequest request : requests) {
+            ProductDetail productDetail = productDetailMapper.toProductDetail(request);
+            productDetails.add(productDetail);
+        }
+
+        return productDetailRepository.saveAll(productDetails);
     }
 
-    return productDetailRepository.saveAll(productDetails);
-  }
+    @Override
+    @Transactional
+    public List<ProductDetail> updateProductDetailsList(List<ProductDetailRequest> requests) {
 
-  @Override
-  @Transactional
-  public List<ProductDetail> updateProductDetailsList(List<ProductDetailRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("List of requests cannot be null or empty");
+        }
 
-    if (requests == null || requests.isEmpty()) {
-      throw new IllegalArgumentException("List of requests cannot be null or empty");
+        List<ProductDetail> existProductDetails = new ArrayList<>();
+
+        for (ProductDetailRequest request : requests) {
+            ProductDetail existProductDetail = productDetailRepository.findById(request.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("ProductDetail not found"));
+
+            productDetailMapper.updateProductDetailFromRequest(request, existProductDetail);
+
+            logger.info("id: " + existProductDetail.getId());
+
+            existProductDetails.add(existProductDetail);
+        }
+
+        return productDetailRepository.saveAll(existProductDetails);
     }
 
-    List<ProductDetail> existProductDetails = new ArrayList<>();
+    @Override
+    @Transactional
+    public Boolean deleteProductDetailList(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException("List of IDs cannot be null or empty");
+        }
 
-    for (ProductDetailRequest request : requests) {
-      ProductDetail existProductDetail = productDetailRepository.findById(request.getId())
-          .orElseThrow(() -> new EntityNotFoundException("ProductDetail not found"));
+        List<ProductDetail> existProductDetails = productDetailRepository.findAllById(ids);
 
-      productDetailMapper.updateProductDetailFromRequest(request, existProductDetail);
+        if (existProductDetails.size() != ids.size()) {
+            throw new EntityNotFoundException("ProductDetail not found");
+        }
 
-      logger.info("id: " + existProductDetail.getId());
+        productDetailRepository.deleteAll(existProductDetails);
 
-      existProductDetails.add(existProductDetail);
+        return true;
     }
 
-    return productDetailRepository.saveAll(existProductDetails);
-  }
+    @Override
+    public List<ProductDetail> getProductDetailById(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-  @Override
-  @Transactional
-  public Boolean deleteProductDetailList(List<Integer> ids) {
-    if (ids == null || ids.isEmpty()) {
-      throw new IllegalArgumentException("List of IDs cannot be null or empty");
+        return productDetailRepository.findByProduct(product);
     }
-
-    List<ProductDetail> existProductDetails = productDetailRepository.findAllById(ids);
-
-    if (existProductDetails.size() != ids.size()) {
-      throw new EntityNotFoundException("ProductDetail not found");
-    }
-
-    productDetailRepository.deleteAll(existProductDetails);
-
-    return true;
-  }
-
-  @Override
-  public List<ProductDetail> getProductDetailById(UUID productId) {
-    Product product = productRepository.findById(productId)
-        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
-
-    return productDetailRepository.findByProduct(product);
-  }
 
 }

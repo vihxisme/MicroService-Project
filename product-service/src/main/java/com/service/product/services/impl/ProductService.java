@@ -6,7 +6,8 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,11 +25,15 @@ import com.service.product.repositories.ApiClient;
 import com.service.product.repositories.CategorieRepository;
 import com.service.product.repositories.ProductRepository;
 import com.service.product.requests.PaginationRequest;
+import com.service.product.requests.ProductDetailRequest;
+import com.service.product.requests.ProductImageRequest;
 import com.service.product.requests.ProductRequest;
+import com.service.product.requests.VariantRequest;
 import com.service.product.resources.ProductResource;
 import com.service.product.resources.ProductWithDiscountResource;
 import com.service.product.responses.PaginationResponse;
 import com.service.product.services.interfaces.ProductInterface;
+import com.service.product.wrapper.ProductWrapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -52,7 +57,15 @@ public class ProductService implements ProductInterface {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private ProductVariantService productVariantService;
+
+    @Autowired
+    private ProductImageService productImageService;
+
+    @Autowired
+    private ProductDetailService productDetailService;
+
+    private Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     @Override
     @Transactional
@@ -64,9 +77,48 @@ public class ProductService implements ProductInterface {
         Product product = productMapper.toProduct(request);
         Product savedProduct = productRepository.save(product);
 
-        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
-
         return savedProduct;
+    }
+
+    @Override
+    @Transactional
+    public Product create(ProductWrapper productWrapper) {
+        ProductRequest request = productWrapper.getProductRequest();
+
+        Product createProduct = createProduct(request);
+
+        if (createProduct != null) {
+
+            VariantRequest variantRequest = VariantRequest.builder()
+                    .productId(createProduct.getId())
+                    .colorIds(productWrapper.getColorIds())
+                    .sizeIds(productWrapper.getSizeIds())
+                    .colorImageUrls(productWrapper.getColorImageUrls())
+                    .build();
+
+            List<ProductImageRequest> prodImageList = productWrapper.getImageUrl().stream()
+                    .map(url -> ProductImageRequest.builder()
+                    .productId(createProduct.getId())
+                    .imageUrl(url)
+                    .build())
+                    .collect(Collectors.toList());
+
+            List<ProductDetailRequest> prodDetailList = productWrapper.getAttributeName().stream()
+                    .map(attributeName -> {
+                        int index = productWrapper.getAttributeName().indexOf(attributeName);
+                        return ProductDetailRequest.builder()
+                                .productId(createProduct.getId())
+                                .attributeName(attributeName)
+                                .attributeValue(productWrapper.getAttributeValue().get(index))
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            productVariantService.createProductVariant(variantRequest);
+            productImageService.createProductImage(prodImageList);
+            productDetailService.createProductDetailList(prodDetailList);
+        }
+        return createProduct;
     }
 
     @Override
@@ -78,8 +130,6 @@ public class ProductService implements ProductInterface {
         productMapper.updateProductFromRequest(request, existProduct);
         Product savedProduct = productRepository.save(existProduct);
 
-        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
-
         return savedProduct;
     }
 
@@ -90,8 +140,6 @@ public class ProductService implements ProductInterface {
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         productRepository.delete(existProduct);
-
-        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
 
         return true;
     }

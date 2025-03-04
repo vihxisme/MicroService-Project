@@ -10,8 +10,11 @@ import com.service.product.requests.ProductRequest;
 import com.service.product.resources.ProductResource;
 import com.service.product.resources.ProductWithDiscountResource;
 import com.service.product.responses.PaginationResponse;
+import com.service.product.wrapper.ProductWrapper;
 
 public interface ProductInterface {
+
+    public Product create(ProductWrapper productWrapper);
 
     Product createProduct(ProductRequest request);
 

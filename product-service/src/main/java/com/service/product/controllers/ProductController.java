@@ -19,6 +19,7 @@ import com.service.product.requests.PaginationRequest;
 import com.service.product.requests.ProductRequest;
 import com.service.product.responses.SuccessResponse;
 import com.service.product.services.interfaces.ProductInterface;
+import com.service.product.wrapper.ProductWrapper;
 
 @RestController
 @RequestMapping("/v1/products")
@@ -27,12 +28,19 @@ public class ProductController {
     @Autowired
     private ProductInterface productInterface;
 
+//     @PostMapping("/create")
+//     public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
+//         return ResponseEntity.ok(
+//                 new SuccessResponse<>(
+//                         "SUCCESS",
+//                         productInterface.createProduct(request)));
+//     }
     @PostMapping("/create")
-    public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
+    public ResponseEntity<?> createProduct(@RequestBody ProductWrapper request) {
         return ResponseEntity.ok(
                 new SuccessResponse<>(
                         "SUCCESS",
-                        productInterface.createProduct(request)));
+                        productInterface.create(request)));
     }
 
     @PatchMapping("/update")

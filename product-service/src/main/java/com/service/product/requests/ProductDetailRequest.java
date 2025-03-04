@@ -14,8 +14,9 @@ import lombok.Setter;
 @Setter
 @Builder
 public class ProductDetailRequest {
-  private Integer id;
-  private UUID productId;
-  private String attributeName;
-  private String attributeValue;
+
+    private Integer id;
+    private UUID productId;
+    private String attributeName;
+    private String attributeValue;
 }
