@@ -48,7 +48,7 @@ public class Order {
     @Column(name = "user_id", nullable = true, columnDefinition = "BINARY(16)")
     private UUID userId;
 
-    @Column(name = "total_amount")
+    @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
     @Column(name = "shipping_fee")
