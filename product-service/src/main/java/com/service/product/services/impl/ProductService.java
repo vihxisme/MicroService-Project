@@ -29,6 +29,7 @@ import com.service.product.requests.ProductDetailRequest;
 import com.service.product.requests.ProductImageRequest;
 import com.service.product.requests.ProductRequest;
 import com.service.product.requests.VariantRequest;
+import com.service.product.resources.ProdAndStatusResource;
 import com.service.product.resources.ProductResource;
 import com.service.product.resources.ProductWithDiscountResource;
 import com.service.product.responses.PaginationResponse;
@@ -262,6 +263,11 @@ public class ProductService implements ProductInterface {
         });
 
         return paginationResponse;
+    }
+
+    @Override
+    public List<ProdAndStatusResource> getProdAndStatus(List<UUID> ids) {
+        return productRepository.findProdAndStatusByProdId(ids);
     }
 
 }

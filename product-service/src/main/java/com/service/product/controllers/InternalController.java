@@ -55,4 +55,9 @@ public class InternalController {
         return ResponseEntity.ok(productVariantInterface.getProdVariantById(variantIds));
     }
 
+    @GetMapping("/product-status")
+    public ResponseEntity<?> getProdAndStatus(@RequestParam List<UUID> productIds) {
+        return ResponseEntity.ok(productInterface.getProdAndStatus(productIds));
+    }
+
 }

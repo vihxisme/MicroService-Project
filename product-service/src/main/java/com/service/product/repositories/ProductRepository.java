@@ -12,26 +12,40 @@ import org.springframework.stereotype.Repository;
 
 import com.service.product.entities.Categorie;
 import com.service.product.entities.Product;
+import com.service.product.resources.ProdAndStatusResource;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-  boolean existsByProductCode(String code);
+    boolean existsByProductCode(String code);
 
-  Page<Product> findAll(Pageable pageable);
+    Page<Product> findAll(Pageable pageable);
 
-  @Query("""
+    @Query("""
       SELECT p FROM Product p WHERE p.status != 'INACTIVE'
       """)
-  List<Product> findAllElseInactive();
+    List<Product> findAllElseInactive();
 
-  @Query("""
+    @Query("""
       SELECT p FROM Product p WHERE p.categorie = :categorie
       """)
-  Page<Product> findAllByCategorie(@Param("categorie") Categorie categorie, Pageable pageable);
+    Page<Product> findAllByCategorie(@Param("categorie") Categorie categorie, Pageable pageable);
 
-  @Query("""
+    @Query("""
       SELECT p FROM Product p WHERE p.status != 'INACTIVE'
       """)
-  Page<Product> findAllElseInactive(Pageable pageable);
+    Page<Product> findAllElseInactive(Pageable pageable);
+
+    @Query("""
+        SELECT new com.service.product.resources.ProdAndStatusResource(
+            p.id,
+            p.name,
+            CAST(p.status AS String)
+        )
+        FROM
+            Product p
+        WHERE 
+            p.id IN :ids
+          """)
+    List<ProdAndStatusResource> findProdAndStatusByProdId(@Param("ids") List<UUID> ids);
 }
