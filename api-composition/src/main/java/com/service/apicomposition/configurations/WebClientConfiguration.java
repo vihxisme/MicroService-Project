@@ -38,4 +38,10 @@ public class WebClientConfiguration {
     public WebClient inventoryWebClient(WebClient.Builder webClientBuilder) {
         return webClientBuilder.baseUrl("http://inventory-service/inventory").build();
     }
+
+    @Bean
+    @Qualifier("cartWebClient")
+    public WebClient cartWebClient(WebClient.Builder webClientBuilder) {
+        return webClientBuilder.baseUrl("http://cart-service/cart").build();
+    }
 }
