@@ -15,6 +15,7 @@ import com.service.cart.repositories.ApiClient;
 import com.service.cart.repositories.CartItemRepository;
 import com.service.cart.requests.CartItemRequest;
 import com.service.cart.resources.CartItemProdResource;
+import com.service.cart.resources.CartItemResource;
 import com.service.cart.services.interfaces.CartItemInterface;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -66,8 +67,8 @@ public class CartItemService implements CartItemInterface {
     }
 
     @Override
-    public List<CartItem> getCartItemByUserId(UUID userId) {
-        List<CartItem> cartItemLists = cartItemRepository.findCartItemByUserId(userId);
+    public List<CartItemResource> getCartItemByUserId(UUID userId) {
+        List<CartItemResource> cartItemLists = cartItemRepository.findCartItemByUserId(userId);
 
         if (cartItemLists == null || cartItemLists.isEmpty()) {
             throw new EntityNotFoundException("NOT FOUND");

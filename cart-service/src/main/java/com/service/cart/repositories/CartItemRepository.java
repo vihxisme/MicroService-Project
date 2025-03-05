@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.service.cart.entities.CartItem;
+import com.service.cart.resources.CartItemResource;
 
 import feign.Param;
 
@@ -15,7 +16,17 @@ import feign.Param;
 public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
 
     @Query("""
-      SELECT ct FROM CartItem ct WHERE ct.cart.userId = :userId
+      SELECT new com.service.cart.resources.CartItemResource(
+        ct.id,
+        ct.cart.id,
+        ct.productId,
+        ct.prodVariantId,
+        ct.quantity
+      )
+      FROM 
+        CartItem ct 
+      WHERE 
+        ct.cart.userId = :userId
       """)
-    List<CartItem> findCartItemByUserId(@Param("userId") UUID userId);
+    List<CartItemResource> findCartItemByUserId(@Param("userId") UUID userId);
 }

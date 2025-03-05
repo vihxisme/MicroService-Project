@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.service.cart.responses.SuccessResponse;
 import com.service.cart.services.interfaces.CartItemInterface;
 
 @RestController
@@ -21,10 +20,6 @@ public class InternalController {
 
     @GetMapping("/cart-item")
     public ResponseEntity<?> getCartItemByuserId(@RequestParam String userId) {
-        return ResponseEntity.ok(
-                new SuccessResponse<>(
-                        "SUCCESS",
-                        cartItemInterface.getCartItemByUserId(UUID.fromString(userId)))
-        );
+        return ResponseEntity.ok(cartItemInterface.getCartItemByUserId(UUID.fromString(userId)));
     }
 }

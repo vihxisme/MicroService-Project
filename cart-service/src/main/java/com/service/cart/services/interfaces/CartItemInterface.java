@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.service.cart.entities.CartItem;
 import com.service.cart.requests.CartItemRequest;
 import com.service.cart.resources.CartItemProdResource;
+import com.service.cart.resources.CartItemResource;
 
 public interface CartItemInterface {
 
@@ -15,7 +16,7 @@ public interface CartItemInterface {
 
     Boolean deleteCartItem(Integer id);
 
-    List<CartItem> getCartItemByUserId(UUID userId);
+    List<CartItemResource> getCartItemByUserId(UUID userId);
 
     List<CartItemProdResource> getCartItemProdByUserId(String userId);
 }
