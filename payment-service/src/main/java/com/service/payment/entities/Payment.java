@@ -36,6 +36,9 @@ public class Payment {
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
+    @Column(name = "payment_code", nullable = false, unique = true)
+    private String paymentCode;
+
     @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "order_id", nullable = false)
     private UUID orderId;
