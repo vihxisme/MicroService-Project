@@ -46,6 +46,9 @@ public class OrderItem {
     @Column(name = "product_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID productId;
 
+    @Column(name = "prod_variant_id", nullable = false)
+    private Integer prodVariantId;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
