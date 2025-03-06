@@ -71,5 +71,5 @@ public class Order {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ShippingAddresses> shippingAddresses;
+    private Set<ShippingAddress> shippingAddresses;
 }

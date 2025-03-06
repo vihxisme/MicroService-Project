@@ -27,7 +27,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class ShippingAddresses {
+public class ShippingAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
