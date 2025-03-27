@@ -11,6 +11,7 @@ import com.service.order.mappers.OrderMapper;
 import com.service.order.repositories.OrderRepository;
 import com.service.order.requests.OrderRequest;
 import com.service.order.services.interfaces.OrderInterface;
+import com.service.order.wrappers.OrderWrapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -71,6 +72,12 @@ public class OrderService implements OrderInterface {
         orderRepository.delete(existOrder);
 
         return true;
+    }
+
+    @Override
+    public Order create(OrderWrapper wrapper) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'create'");
     }
 
 }
