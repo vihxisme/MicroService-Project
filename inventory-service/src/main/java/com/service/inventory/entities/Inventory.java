@@ -10,7 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.service.inventory.listeners.InventoryItemListener;
+import com.service.inventory.listeners.InventoryListener;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -34,7 +34,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@EntityListeners(InventoryItemListener.class)
+@EntityListeners(InventoryListener.class)
 public class Inventory {
 
     @Id
