@@ -3,10 +3,12 @@ package com.service.product.entities;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.service.product.listeners.ColorListener;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,15 +28,17 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@EntityListeners(ColorListener.class)
 public class Color {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
 
-  @Column(name = "name", nullable = false, unique = true)
-  private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-  @JsonManagedReference
-  @OneToMany(mappedBy = "color", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private Set<ProductVariant> productVariants;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "color", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<ProductVariant> productVariants;
 }

@@ -13,10 +13,12 @@ import org.hibernate.type.SqlTypes;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.service.product.enums.StatusEnum;
+import com.service.product.listeners.ProductListener;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -40,54 +42,56 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@EntityListeners(ProductListener.class)
 public class Product {
-  @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  @JdbcTypeCode(SqlTypes.BINARY)
-  @Column(name = "id", columnDefinition = "BINARY(16)")
-  private UUID id;
 
-  @Column(name = "product_code", nullable = false, unique = true)
-  private String productCode;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", columnDefinition = "BINARY(16)")
+    private UUID id;
 
-  @JsonBackReference
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "category_id")
-  private Categorie categorie;
+    @Column(name = "product_code", nullable = false, unique = true)
+    private String productCode;
 
-  @Column(name = "name", nullable = false)
-  private String name;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Categorie categorie;
 
-  @Column(name = "price", nullable = false)
-  private BigDecimal price;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-  @Column(name = "brand", nullable = true)
-  private String brand;
+    @Column(name = "price", nullable = false)
+    private BigDecimal price;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "status", columnDefinition = "ENUM('ACTIVE', 'INACTIVE', 'OUT_OF_STOCK') DEFAULT 'INACTIVE'")
-  private StatusEnum status;
+    @Column(name = "brand", nullable = true)
+    private String brand;
 
-  @Column(name = "product_image_url", nullable = false)
-  private String productImageUrl;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "ENUM('ACTIVE', 'INACTIVE', 'OUT_OF_STOCK') DEFAULT 'INACTIVE'")
+    private StatusEnum status;
 
-  @CreationTimestamp
-  @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
-  private Timestamp createdAt;
+    @Column(name = "product_image_url", nullable = false)
+    private String productImageUrl;
 
-  @UpdateTimestamp
-  @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = true)
-  private Timestamp updatedAt;
+    @CreationTimestamp
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
+    private Timestamp createdAt;
 
-  @JsonManagedReference
-  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<ProductVariant> productVariants;
+    @UpdateTimestamp
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = true)
+    private Timestamp updatedAt;
 
-  @JsonManagedReference
-  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<ProductImage> productImages;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductVariant> productVariants;
 
-  @JsonManagedReference
-  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<ProductDetail> productDetails;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductImage> productImages;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductDetail> productDetails;
 }

@@ -21,4 +21,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, UUID> {
     void updateQuantity(@Param("inventoryId") UUID inventoryId, @Param("quantity") Integer quantity);
 
     Page<Inventory> findAll(Pageable pageble);
+
+    boolean existsByIdAndIsAllowed(UUID id, Boolean isAllowed);
 }

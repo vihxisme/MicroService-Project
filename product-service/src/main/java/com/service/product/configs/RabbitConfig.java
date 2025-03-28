@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.service.events.dto.InventoryEvent;
+import com.service.events.dto.UpdateProductStatusDTO;
 import com.service.events.dto.UpdateVariantQuantityDTO;
 import com.service.product.requests.ProductDetailRequest;
 import com.service.product.requests.ProductImageRequest;
@@ -64,6 +65,7 @@ public class RabbitConfig {
         idClassMapping.put("com.service.events.dto.InventoryEvent", InventoryEvent.class);
         idClassMapping.put("com.service.product.resources.ProductVariantResource", ProductVariantResource.class);
         idClassMapping.put("com.service.events.dto.UpdateVariantQuantityDTO", UpdateVariantQuantityDTO.class);
+        idClassMapping.put("com.service.events.dto.UpdateProductStatusDTO", UpdateProductStatusDTO.class);
         classMapper.setIdClassMapping(idClassMapping);
 
         return classMapper;
@@ -100,6 +102,11 @@ public class RabbitConfig {
     }
 
     @Bean
+    public Queue updateProductStatusQueue() {
+        return new Queue("update-product-status:queue", true, false, true);
+    }
+
+    @Bean
     public Binding bindingCacheQueue(Queue cacheQueue, DirectExchange exchange) {
         return BindingBuilder.bind(cacheQueue).to(exchange).with("clear-cache");
     }
@@ -122,5 +129,10 @@ public class RabbitConfig {
     @Bean
     public Binding bindingUpdateVariantQuantityQueue(Queue updateVariantQuantityQueue, DirectExchange exchange) {
         return BindingBuilder.bind(updateVariantQuantityQueue).to(exchange).with("update-variant-quantity");
+    }
+
+    @Bean
+    public Binding bindingUpdateProductStatusQueue(Queue updateProductStatusQueue, DirectExchange exchange) {
+        return BindingBuilder.bind(updateProductStatusQueue).to(exchange).with("update-product-status");
     }
 }

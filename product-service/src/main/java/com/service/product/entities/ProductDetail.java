@@ -5,9 +5,11 @@ import java.sql.Timestamp;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.service.product.listeners.ProductDetailListener;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,24 +30,26 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@EntityListeners(ProductDetailListener.class)
 public class ProductDetail {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
 
-  @JsonBackReference
-  @ManyToOne
-  @JoinColumn(name = "product_id", nullable = false)
-  private Product product;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-  @Column(name = "attribute_name", nullable = false)
-  private String attributeName;
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
-  @Lob
-  @Column(name = "attribute_value", nullable = false, columnDefinition = "TEXT")
-  private String attributeValue;
+    @Column(name = "attribute_name", nullable = false)
+    private String attributeName;
 
-  @CreationTimestamp
-  @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-  private Timestamp createdAt;
+    @Lob
+    @Column(name = "attribute_value", nullable = false, columnDefinition = "TEXT")
+    private String attributeValue;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
 }

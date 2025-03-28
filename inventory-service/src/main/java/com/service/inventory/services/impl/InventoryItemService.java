@@ -18,6 +18,7 @@ import com.service.inventory.entities.InventoryItem;
 import com.service.inventory.mappers.InventoryItemMapper;
 import com.service.inventory.repositories.ApiClient;
 import com.service.inventory.repositories.InventoryItemRepository;
+import com.service.inventory.repositories.InventoryRepository;
 import com.service.inventory.requests.InventoryItemRequest;
 import com.service.inventory.requests.PaginationRequest;
 import com.service.inventory.resources.ItemProdVariantResource;
@@ -33,6 +34,9 @@ public class InventoryItemService implements InventoryItemInterface {
 
     @Autowired
     private InventoryItemRepository inventoryItemRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
     @Autowired
     private InventoryItemMapper inventoryItemMapper;
@@ -71,6 +75,10 @@ public class InventoryItemService implements InventoryItemInterface {
         InventoryItem existInventoryItem = inventoryItemRepository.findById(request.getId()).orElseThrow(()
                 -> new EntityNotFoundException("InventoryItem not found"));
 
+        if (!inventoryRepository.existsByIdAndIsAllowed(request.getInventoryId(), true)) {
+            throw new EntityNotFoundException("Not Permision");
+        }
+
         inventoryItemMapper.updateInventoryItemFromRequest(request, existInventoryItem);
 
         inventoryItemRepository.save(existInventoryItem);
@@ -92,6 +100,10 @@ public class InventoryItemService implements InventoryItemInterface {
     public InventoryItem inventoryIntake(UUID id, int quantity) {
         InventoryItem inventoryItem = inventoryItemRepository.findById(id).orElseThrow(()
                 -> new EntityNotFoundException("InventoryItem not found"));
+
+        if (!inventoryRepository.existsByIdAndIsAllowed(inventoryItem.getInventory().getId(), true)) {
+            throw new EntityNotFoundException("Not Permision");
+        }
 
         int itemQuantity = inventoryItem.getItemQuantity() + quantity;
 

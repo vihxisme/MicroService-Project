@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.service.events.dto.InventoryEvent;
+import com.service.events.dto.UpdateProductStatusDTO;
 import com.service.events.dto.UpdateVariantQuantityDTO;
 import com.service.inventory.wrappers.InventoryItemWrapper;
 
@@ -50,6 +51,7 @@ public class RabbitConfig {
         idClassMapping.put("com.service.events.dto.InventoryEvent", InventoryEvent.class);
         idClassMapping.put("com.service.inventory.wrappers.InventoryItemWrapper", InventoryItemWrapper.class);
         idClassMapping.put("com.service.events.dto.UpdateVariantQuantityDTO", UpdateVariantQuantityDTO.class);
+        idClassMapping.put("com.service.events.dto.UpdateProductStatusDTO", UpdateProductStatusDTO.class);
         classMapper.setIdClassMapping(idClassMapping);
 
         return classMapper;

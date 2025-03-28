@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.service.events.dto.InventoryEvent;
+import com.service.events.dto.UpdateProductStatusDTO;
 import com.service.events.dto.InventoryDTO;
 import com.service.product.entities.Categorie;
 import com.service.product.entities.Product;
@@ -151,6 +153,16 @@ public class ProductService implements ProductInterface {
         }
 
         return createProduct;
+    }
+
+    @RabbitListener(queues = "update-product-status:queue")
+    public void updateProductStatus(UpdateProductStatusDTO dto) {
+        ProductRequest request = ProductRequest.builder()
+                .id(dto.getProductId())
+                .status(dto.getStatus())
+                .build();
+
+        updateProduct(request);
     }
 
     @Override
