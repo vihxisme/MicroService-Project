@@ -14,9 +14,11 @@ import lombok.Setter;
 @Setter
 @Builder
 public class ProductVariantRequest {
-  private Integer id;
-  private UUID productId;
-  private Integer colorId;
-  private Integer sizeId;
-  private String colorImageUrl;
+
+    private Integer id;
+    private UUID productId;
+    private Integer colorId;
+    private Integer sizeId;
+    private String colorImageUrl;
+    private Integer stock;
 }
