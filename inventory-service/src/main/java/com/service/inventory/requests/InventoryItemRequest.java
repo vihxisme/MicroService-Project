@@ -17,6 +17,8 @@ public class InventoryItemRequest {
 
     private UUID id;
     private UUID inventoryId;
-    private int prodVariantId;
-    private int itemQuantity;
+    private Integer prodVariantId;
+
+    @Builder.Default
+    private Integer itemQuantity = 0;
 }
