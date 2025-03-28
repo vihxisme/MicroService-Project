@@ -55,4 +55,6 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, UU
             WHERE sm.movementType = 'OUT'
     """)
     Page<StockMovementResource> findAllTypeOUT(Pageable pageable);
+
+    boolean existsByStockMovementCode(String code);
 }
