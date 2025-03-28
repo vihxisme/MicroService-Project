@@ -25,85 +25,85 @@ import jakarta.transaction.Transactional;
 @Service
 public class CategorieService implements CategorieInterface {
 
-  @Autowired
-  private CategorieRepository categorieRepository;
+    @Autowired
+    private CategorieRepository categorieRepository;
 
-  @Autowired
-  private CategorieMapper categorieMapper;
+    @Autowired
+    private CategorieMapper categorieMapper;
 
-  @Override
-  @Transactional
-  public Categorie createCategorie(CategorieRequest request) {
-    if (request.getCategorieCode() == null) {
-      request.setCategorieCode(generateCategorieCode());
+    @Override
+    @Transactional
+    public Categorie createCategorie(CategorieRequest request) {
+        if (request.getCategorieCode() == null) {
+            request.setCategorieCode(generateCategorieCode());
+        }
+
+        Categorie categorie = categorieMapper.toCategorie(request);
+
+        return categorieRepository.save(categorie);
     }
 
-    Categorie categorie = categorieMapper.toCategorie(request);
+    @Override
+    @Transactional
+    public Categorie updateCategorie(CategorieRequest request) {
+        Categorie existCategorie = categorieRepository.findById(request.getId())
+                .orElseThrow(() -> new RuntimeException("Categorie not found"));
 
-    return categorieRepository.save(categorie);
-  }
+        categorieMapper.updateCategorieFromRequest(request, existCategorie);
 
-  @Override
-  @Transactional
-  public Categorie updateCategorie(CategorieRequest request) {
-    Categorie existCategorie = categorieRepository.findById(request.getId())
-        .orElseThrow(() -> new RuntimeException("Categorie not found"));
+        return categorieRepository.save(existCategorie);
+    }
 
-    categorieMapper.updateCategorieFromRequest(request, existCategorie);
+    @Override
+    @Transactional
+    public Boolean deleteCategorie(UUID id) {
+        Categorie existCategorie = categorieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categorie not found"));
 
-    return categorieRepository.save(existCategorie);
-  }
+        categorieRepository.delete(existCategorie);
 
-  @Override
-  @Transactional
-  public Boolean deleteCategorie(UUID id) {
-    Categorie existCategorie = categorieRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Categorie not found"));
+        return true;
+    }
 
-    categorieRepository.delete(existCategorie);
+    @Override
+    public List<Categorie> getAllCategorie() {
+        return categorieRepository.findAll();
+    }
 
-    return true;
-  }
+    private String generateCategorieCode() {
+        Boolean isUnique;
+        Random random = new Random();
+        String code;
+        do {
+            int randomNumberStart = random.nextInt(100, 999);
+            int randomNumberMiddle = random.nextInt(1000, 9999);
+            int randomNumberEnd = random.nextInt(1000, 9999);
+            code = String.format("%03d-%04d-%04d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
+            isUnique = !categorieRepository.existsByCategorieCode(code);
+        } while (!isUnique);
 
-  @Override
-  public List<Categorie> getAllCategorie() {
-    return categorieRepository.findAll();
-  }
+        return code;
+    }
 
-  private String generateCategorieCode() {
-    Boolean isUnique;
-    Random random = new Random();
-    String code;
-    do {
-      int randomNumberStart = random.nextInt(100, 999);
-      int randomNumberMiddle = random.nextInt(10000, 99999);
-      int randomNumberEnd = random.nextInt(10000, 99999);
-      code = String.format("%03d-%05d-%05d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
-      isUnique = !categorieRepository.existsByCategorieCode(code);
-    } while (!isUnique);
+    @Override
+    public PaginationResponse<Categorie> getAllCategorie(PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-    return code;
-  }
+        Page<Categorie> categories = categorieRepository.findAll(pageable);
 
-  @Override
-  public PaginationResponse<Categorie> getAllCategorie(PaginationRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        return PaginationResponse.<Categorie>builder()
+                .content(categories.getContent())
+                .pageNumber(request.getPage())
+                .pageSize(request.getSize())
+                .totalPages(categories.getTotalPages())
+                .totalElements(categories.getTotalElements())
+                .build();
+    }
 
-    Page<Categorie> categories = categorieRepository.findAll(pageable);
-
-    return PaginationResponse.<Categorie>builder()
-        .content(categories.getContent())
-        .pageNumber(request.getPage())
-        .pageSize(request.getSize())
-        .totalPages(categories.getTotalPages())
-        .totalElements(categories.getTotalElements())
-        .build();
-  }
-
-  @Override
-  public Map<UUID, String> getCategorieName(List<UUID> categorieIds) {
-    return categorieRepository.findAllById(categorieIds)
-        .stream()
-        .collect(Collectors.toMap(Categorie::getId, Categorie::getName));
-  }
+    @Override
+    public Map<UUID, String> getCategorieName(List<UUID> categorieIds) {
+        return categorieRepository.findAllById(categorieIds)
+                .stream()
+                .collect(Collectors.toMap(Categorie::getId, Categorie::getName));
+    }
 }

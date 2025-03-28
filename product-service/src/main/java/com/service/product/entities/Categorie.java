@@ -52,6 +52,9 @@ public class Categorie {
     @Column(name = "categorie_image_url", nullable = false)
     private String categorieImageUrl;
 
+    @Column(name = "apparel_type")
+    private Integer apparelType;
+
     @CreationTimestamp
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
     private Timestamp createdAt;

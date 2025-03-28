@@ -14,8 +14,10 @@ import lombok.Setter;
 @Setter
 @Builder
 public class CategorieRequest {
-  private UUID id;
-  private String categorieCode;
-  private String name;
-  private String categorieImageUrl;
+
+    private UUID id;
+    private String categorieCode;
+    private String name;
+    private String categorieImageUrl;
+    private Integer apparelType;
 }
