@@ -7,9 +7,11 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.service.events.dto.UpdateVariantQuantityDTO;
 import com.service.product.entities.ProductVariant;
 import com.service.product.mappers.ProductVariantMapper;
 import com.service.product.repositories.ProductVariantRepository;
@@ -17,6 +19,7 @@ import com.service.product.requests.ProductVariantRequest;
 import com.service.product.requests.VariantRequest;
 import com.service.product.resources.ColorResource;
 import com.service.product.resources.ProdVariantResource;
+import com.service.product.resources.ProductVariantResource;
 import com.service.product.resources.SizeResource;
 import com.service.product.services.interfaces.ProductVariantInterface;
 
@@ -34,19 +37,39 @@ public class ProductVariantService implements ProductVariantInterface {
 
     private Logger logger = LoggerFactory.getLogger(ProductVariantService.class);
 
+    @RabbitListener(queues = "create-prod-variant:queue")
+    public List<ProductVariantResource> createProdVariantListener(VariantRequest request) {
+
+        List<ProductVariant> prodVariants = createProductVariant(request);
+
+        List<ProductVariantResource> prodVariantResources = prodVariants.stream()
+                .map(productVariantMapper::toProdVariantResource)
+                .collect(Collectors.toList());
+
+        return prodVariantResources;
+    }
+
+    @RabbitListener(queues = "update-variant-quantity:queue")
+    public void updateVariantQuantity(UpdateVariantQuantityDTO dto) {
+        ProductVariantRequest request = ProductVariantRequest.builder()
+                .id(dto.getProdVariantId())
+                .stock(dto.getQuantity())
+                .build();
+
+        logger.info("id: " + request.getId());
+        logger.info("stock: " + request.getStock());
+
+        updateProductVariant(request);
+    }
+
     @Override
     @Transactional
     public List<ProductVariant> createProductVariant(VariantRequest request) {
         List<ProductVariant> productVariantList = new ArrayList<>();
 
-        logger.info("color: " + request.getColorIds().size());
-        logger.info("size: " + request.getSizeIds().size());
-        logger.info("image: " + request.getColorImageUrls().size());
-
         for (Integer i = 0; i < request.getColorIds().size(); i++) {
             String colorImage = (i < request.getColorImageUrls().size() && request.getColorImageUrls().get(i) != null)
                     ? request.getColorImageUrls().get(i) : null;
-            logger.info("colorImage: " + colorImage);
             for (Integer size : request.getSizeIds()) {
                 ProductVariantRequest productVariantRequest = ProductVariantRequest.builder()
                         .productId(request.getProductId())

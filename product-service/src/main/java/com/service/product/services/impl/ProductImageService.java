@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import com.service.product.repositories.ProductImageRepository;
 import com.service.product.repositories.ProductRepository;
 import com.service.product.requests.ProductImageRequest;
 import com.service.product.services.interfaces.ProductImageInterface;
+import com.service.product.wrapper.ProdImageWrapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -34,14 +36,12 @@ public class ProductImageService implements ProductImageInterface {
 
     private Logger logger = LoggerFactory.getLogger(ProductImageService.class);
 
-    // @RabbitListener(bindings = @QueueBinding(
-    //         value = @Queue(name = "create-prod-images", durable = "true"),
-    //         exchange = @Exchange(name = "create-prod-images-exchange", type = "direct"),
-    //         key = "create-prod-images"
-    // ))
-    // public void createProdImageListener(List<ProductImageRequest> requests) {
-    //     createProductImage(requests);
-    // }
+    @RabbitListener(queues = "create-prod-image:queue")
+    public void createProdImageListener(ProdImageWrapper wrapper) {
+        List<ProductImageRequest> requests = wrapper.getProdImageList();
+        createProductImage(requests);
+    }
+
     @Override
     @Transactional
     public List<ProductImage> createProductImage(List<ProductImageRequest> requests) {

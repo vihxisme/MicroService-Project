@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import com.service.product.repositories.ProductDetailRepository;
 import com.service.product.repositories.ProductRepository;
 import com.service.product.requests.ProductDetailRequest;
 import com.service.product.services.interfaces.ProductDetailInterface;
+import com.service.product.wrapper.ProdDetailsWrapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -34,14 +36,12 @@ public class ProductDetailService implements ProductDetailInterface {
 
     private Logger logger = LoggerFactory.getLogger(ProductDetailService.class);
 
-    // @RabbitListener(bindings = @QueueBinding(
-    //         value = @Queue(name = "create-prod-details", durable = "true"),
-    //         exchange = @Exchange(name = "create-prod-details-exchange", type = "direct"),
-    //         key = "create-prod-details"
-    // ))
-    // public void createProdDetailListener(List<ProductDetailRequest> requests) {
-    //     createProductDetailList(requests);
-    // }
+    @RabbitListener(queues = "create-prod-details:queue")
+    public void createProdDetailListener(ProdDetailsWrapper wrapper) {
+        List<ProductDetailRequest> requests = wrapper.getProdDetailsList();
+        createProductDetailList(requests);
+    }
+
     @Override
     @Transactional
     public List<ProductDetail> createProductDetailList(List<ProductDetailRequest> requests) {

@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +20,11 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.service.events.dto.InventoryEvent;
+import com.service.events.dto.InventoryDTO;
 import com.service.product.entities.Categorie;
 import com.service.product.entities.Product;
+import com.service.product.enums.StatusEnum;
 import com.service.product.mappers.ProductMapper;
 import com.service.product.repositories.ApiClient;
 import com.service.product.repositories.CategorieRepository;
@@ -31,9 +36,12 @@ import com.service.product.requests.ProductRequest;
 import com.service.product.requests.VariantRequest;
 import com.service.product.resources.ProdAndStatusResource;
 import com.service.product.resources.ProductResource;
+import com.service.product.resources.ProductVariantResource;
 import com.service.product.resources.ProductWithDiscountResource;
 import com.service.product.responses.PaginationResponse;
 import com.service.product.services.interfaces.ProductInterface;
+import com.service.product.wrapper.ProdDetailsWrapper;
+import com.service.product.wrapper.ProdImageWrapper;
 import com.service.product.wrapper.ProductWrapper;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -58,13 +66,13 @@ public class ProductService implements ProductInterface {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private ProductVariantService productVariantService;
+    private RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private ProductImageService productImageService;
+    @Value("${rabbitmq.exchange.product}")
+    private String myExchange;
 
-    @Autowired
-    private ProductDetailService productDetailService;
+    @Value("${rabbitmq.exchange.inventory}")
+    private String inventoryExchange;
 
     private Logger logger = LoggerFactory.getLogger(ProductService.class);
 
@@ -82,28 +90,24 @@ public class ProductService implements ProductInterface {
     }
 
     @Override
-    @Transactional
     public Product create(ProductWrapper productWrapper) {
         ProductRequest request = productWrapper.getProductRequest();
 
         Product createProduct = createProduct(request);
 
         if (createProduct != null) {
-
             VariantRequest variantRequest = VariantRequest.builder()
                     .productId(createProduct.getId())
                     .colorIds(productWrapper.getColorIds())
                     .sizeIds(productWrapper.getSizeIds())
                     .colorImageUrls(productWrapper.getColorImageUrls())
                     .build();
-
             List<ProductImageRequest> prodImageList = productWrapper.getImageUrl().stream()
                     .map(url -> ProductImageRequest.builder()
                     .productId(createProduct.getId())
                     .imageUrl(url)
                     .build())
                     .collect(Collectors.toList());
-
             List<ProductDetailRequest> prodDetailList = productWrapper.getAttributeName().stream()
                     .map(attributeName -> {
                         int index = productWrapper.getAttributeName().indexOf(attributeName);
@@ -115,10 +119,37 @@ public class ProductService implements ProductInterface {
                     })
                     .collect(Collectors.toList());
 
-            productVariantService.createProductVariant(variantRequest);
-            productImageService.createProductImage(prodImageList);
-            productDetailService.createProductDetailList(prodDetailList);
+            ProdDetailsWrapper prodDetailsWrapper = ProdDetailsWrapper.builder().prodDetailsList(prodDetailList).build();
+            ProdImageWrapper prodImageWrapper = ProdImageWrapper.builder().prodImageList(prodImageList).build();
+
+            Object response = rabbitTemplate.convertSendAndReceive(myExchange, "create-prod-variant", variantRequest);
+            List<ProductVariantResource> prodVariantResourceList = objectMapper.convertValue(
+                    response,
+                    new TypeReference<List<ProductVariantResource>>() {
+            }
+            );
+
+            rabbitTemplate.convertAndSend(myExchange, "create-prod-image", prodImageWrapper);
+            rabbitTemplate.convertAndSend(myExchange, "create-prod-details", prodDetailsWrapper);
+
+            if (prodVariantResourceList != null && !prodVariantResourceList.isEmpty()) {
+                InventoryDTO inventoryDTO = InventoryDTO.builder()
+                        .productCode(createProduct.getProductCode())
+                        .productId(createProduct.getId())
+                        .isAllowed(createProduct.getStatus() != StatusEnum.INACTIVE)
+                        .build();
+
+                InventoryEvent inventoryEvent = InventoryEvent.builder()
+                        .inventoryDTO(inventoryDTO)
+                        .prodVariantId(prodVariantResourceList.stream().map(ProductVariantResource::getId).collect(Collectors.toList()))
+                        .build();
+
+                rabbitTemplate.convertAndSend(inventoryExchange, "create-inventory", inventoryEvent);
+            } else {
+                throw new IllegalArgumentException("ProdVariant is null");
+            }
         }
+
         return createProduct;
     }
 
@@ -151,9 +182,9 @@ public class ProductService implements ProductInterface {
         String code;
         do {
             int randomNumberStart = random.nextInt(100, 999);
-            int randomNumberMiddle = random.nextInt(10000, 99999);
-            int randomNumberEnd = random.nextInt(10000, 99999);
-            code = String.format("%03d-%05d-%05d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
+            int randomNumberMiddle = random.nextInt(1000, 9999);
+            int randomNumberEnd = random.nextInt(1000, 9999);
+            code = String.format("%03d-%04d-%04d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
             isUnique = !productRepository.existsByProductCode(code);
         } while (!isUnique);
 
