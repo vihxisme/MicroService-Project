@@ -20,5 +20,7 @@ public class ProductVariantRequest {
     private Integer colorId;
     private Integer sizeId;
     private String colorImageUrl;
-    private Integer stock;
+
+    @Builder.Default
+    private Integer stock = 0;
 }

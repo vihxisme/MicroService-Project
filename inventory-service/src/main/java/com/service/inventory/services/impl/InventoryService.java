@@ -10,6 +10,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -52,6 +53,9 @@ public class InventoryService implements InventoryInterface {
     private ApiClient apiClient;
 
     @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
     private RabbitTemplate rabbitTemplate;
 
     @Value("${rabbitmq.exchange.inventory}")
@@ -80,12 +84,9 @@ public class InventoryService implements InventoryInterface {
     public Inventory createInventory(InventoryRequest request) {
         Inventory inventory = inventoryMapper.toInventory(request);
 
-        logger.info("prodCode: " + inventory.getProductCode());
-        logger.info("prodId: " + inventory.getProductId());
-        logger.info("prodQuantity: " + inventory.getQuantity());
-        logger.info("prodIsAllow: " + inventory.getIsAllowed());
-
         inventoryRepository.save(inventory);
+
+        eventPublisher.publishEvent(inventory);
 
         return inventory;
     }
@@ -98,7 +99,11 @@ public class InventoryService implements InventoryInterface {
 
         inventoryMapper.updateInventoryFromRequest(request, existInventory);
 
-        return inventoryRepository.save(existInventory);
+        inventoryRepository.save(existInventory);
+
+        eventPublisher.publishEvent(existInventory);
+
+        return existInventory;
     }
 
     @Override
@@ -108,6 +113,8 @@ public class InventoryService implements InventoryInterface {
                 -> new EntityNotFoundException("Inventory not found"));
 
         inventoryRepository.delete(existInventory);
+
+        eventPublisher.publishEvent(existInventory);
 
         return true;
     }

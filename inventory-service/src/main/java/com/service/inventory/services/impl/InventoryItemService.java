@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +48,9 @@ public class InventoryItemService implements InventoryItemInterface {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     @RabbitListener(queues = "create-inventory-item:queue")
     public void createInventoryItemListener(InventoryItemWrapper wrapper) {
         createInventoryItem(wrapper.getInventoryItemRequests());
@@ -67,7 +71,11 @@ public class InventoryItemService implements InventoryItemInterface {
             inventoryItems.add(inventoryItem);
         }
 
-        return inventoryItemRepository.saveAll(inventoryItems);
+        inventoryItemRepository.saveAll(inventoryItems);
+
+        eventPublisher.publishEvent(inventoryItems);
+
+        return inventoryItems;
     }
 
     @Override
@@ -83,6 +91,8 @@ public class InventoryItemService implements InventoryItemInterface {
 
         inventoryItemRepository.save(existInventoryItem);
 
+        eventPublisher.publishEvent(existInventoryItem);
+
         return existInventoryItem;
     }
 
@@ -92,6 +102,8 @@ public class InventoryItemService implements InventoryItemInterface {
                 -> new EntityNotFoundException("InventoryItem not found"));
 
         inventoryItemRepository.delete(existInventoryItem);
+
+        eventPublisher.publishEvent(existInventoryItem);
 
         return true;
     }

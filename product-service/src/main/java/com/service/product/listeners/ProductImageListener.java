@@ -3,7 +3,7 @@ package com.service.product.listeners;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.service.product.entities.Product;
+import com.service.product.entities.ProductImage;
 
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
@@ -17,7 +17,7 @@ public class ProductImageListener {
     @PostPersist
     @PostUpdate
     @PostRemove
-    public void afterChange(Product product) {
+    public void afterChange(ProductImage productImage) {
         rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache:queue", "*");
     }
 }

@@ -1,10 +1,18 @@
 package com.service.inventory.listeners;
 
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.service.events.dto.UpdateVariantQuantityDTO;
 import com.service.inventory.entities.Inventory;
@@ -12,10 +20,7 @@ import com.service.inventory.entities.InventoryItem;
 import com.service.inventory.repositories.InventoryItemRepository;
 import com.service.inventory.repositories.InventoryRepository;
 
-import jakarta.persistence.PostPersist;
-import jakarta.persistence.PostRemove;
-import jakarta.persistence.PostUpdate;
-
+@Component
 public class InventoryItemListener {
 
     @Autowired
@@ -32,31 +37,63 @@ public class InventoryItemListener {
     @Value("${rabbitmq.exchange.product}")
     private String productExchange;
 
-    @PostPersist
-    @PostUpdate
-    @PostRemove
-    public void afterChange(InventoryItem inventoryItem) {
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onInventoryItemChanged(InventoryItem item) {
+        if (item == null) {
+            return;
+        }
 
-        if (inventoryItem != null) {
-            Inventory inventory = inventoryRepository.findById(inventoryItem.getInventory().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Inventory not found for ID: " + inventoryItem.getInventory().getId()));
+        updateInventoryQuantityAndNotify(item.getInventory().getId());
 
-            Integer totalQuantity = inventoryItemRepository.sumItemQuantityByInventoryId(inventory.getId());
-            int updatedQuantity = totalQuantity != null ? Math.max(totalQuantity, 0) : 0;
-            inventoryRepository.save(inventory);
-            inventory.setQuantity(updatedQuantity);
+        // Notify variant quantity
+        if (item.getItemQuantity() != null) {
+            rabbitTemplate.convertAndSend(
+                    productExchange,
+                    "update-variant-quantity",
+                    UpdateVariantQuantityDTO.builder()
+                            .prodVariantId(item.getProdVariantId())
+                            .quantity(item.getItemQuantity())
+                            .build()
+            );
+        }
+    }
 
-            rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "inven");
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onInventoryItemListChanged(List<InventoryItem> items) {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
 
-            if (inventoryItem.getItemQuantity() != null) {
+        Set<UUID> inventoryIds = items.stream()
+                .map(i -> i.getInventory().getId())
+                .collect(Collectors.toSet());
+
+        inventoryIds.forEach(this::updateInventoryQuantityAndNotify);
+
+        items.forEach(item -> {
+            if (item.getItemQuantity() != null) {
                 rabbitTemplate.convertAndSend(
                         productExchange,
                         "update-variant-quantity",
                         UpdateVariantQuantityDTO.builder()
-                                .prodVariantId(inventoryItem.getProdVariantId())
-                                .quantity(inventoryItem.getItemQuantity())
-                                .build());
+                                .prodVariantId(item.getProdVariantId())
+                                .quantity(item.getItemQuantity())
+                                .build()
+                );
             }
-        }
+        });
+    }
+
+    private void updateInventoryQuantityAndNotify(UUID inventoryId) {
+        Inventory inventory = inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Inventory not found for ID: " + inventoryId));
+
+        Integer totalQuantity = inventoryItemRepository.sumItemQuantityByInventoryId(inventoryId);
+        int updatedQuantity = totalQuantity != null ? Math.max(totalQuantity, 0) : 0;
+
+        inventory.setQuantity(updatedQuantity);
+        inventoryRepository.save(inventory);
+
+        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "inven");
     }
 }

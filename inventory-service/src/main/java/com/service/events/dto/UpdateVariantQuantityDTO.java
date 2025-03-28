@@ -13,6 +13,6 @@ import lombok.Setter;
 @Builder
 public class UpdateVariantQuantityDTO {
 
-    private int prodVariantId;
-    private int quantity;
+    private Integer prodVariantId;
+    private Integer quantity;
 }

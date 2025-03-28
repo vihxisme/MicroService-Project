@@ -10,12 +10,10 @@ import org.hibernate.type.SqlTypes;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.service.inventory.listeners.InventoryItemListener;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,7 +34,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@EntityListeners(InventoryItemListener.class)
 public class InventoryItem {
 
     @Id

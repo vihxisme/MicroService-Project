@@ -26,6 +26,6 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, UU
     @Query("SELECT ii FROM InventoryItem ii WHERE ii.inventory.id = :inventoryId AND ii.inventory.isAllowed = true")
     Page<InventoryItem> findAll(@Param("inventoryId") UUID inventoryId, Pageable pageable);
 
-    @Query("SELECT SUM(i.itemQuantity) FROM InventoryItem i WHERE i.inventoryId = :inventoryId")
+    @Query("SELECT SUM(i.itemQuantity) FROM InventoryItem i WHERE i.inventory.id = :inventoryId")
     Integer sumItemQuantityByInventoryId(@Param("inventoryId") UUID inventoryId);
 }
