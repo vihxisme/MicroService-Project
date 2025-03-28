@@ -1,14 +1,15 @@
 package com.service.inventory.services.impl;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,17 +18,20 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.service.inventory.entities.Inventory;
+import com.service.events.dto.InventoryEvent;
 import com.service.inventory.mappers.InventoryMapper;
 import com.service.inventory.repositories.ApiClient;
-import com.service.inventory.repositories.InventoryItemRepository;
 import com.service.inventory.repositories.InventoryRepository;
+import com.service.inventory.requests.InventoryItemRequest;
 import com.service.inventory.requests.InventoryRequest;
 import com.service.inventory.requests.PaginationRequest;
 import com.service.inventory.resources.InventoryProductResource;
 import com.service.inventory.resources.InventoryResource;
 import com.service.inventory.responses.PaginationResponse;
 import com.service.inventory.services.interfaces.InventoryInterface;
+import com.service.inventory.wrappers.InventoryItemWrapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -39,9 +43,6 @@ public class InventoryService implements InventoryInterface {
     private InventoryRepository inventoryRepository;
 
     @Autowired
-    private InventoryItemRepository inventoryItemRepository;
-
-    @Autowired
     private InventoryMapper inventoryMapper;
 
     @Autowired
@@ -50,17 +51,28 @@ public class InventoryService implements InventoryInterface {
     @Autowired
     private ApiClient apiClient;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Value("${rabbitmq.exchange.inventory}")
+    private String exchange;
+
     private Logger logger = LoggerFactory.getLogger(InventoryService.class);
 
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = "create-inventory", durable = "true"),
-            exchange = @Exchange(name = "cache-create-inventory-exchange", type = "direct"),
-            key = "create-inventory"
-    ))
-    private Boolean createInventoryListener(InventoryRequest request) {
-        Inventory isInventory = createInventory(request);
+    @RabbitListener(queues = "create-inventory:queue")
+    public void createInventoryListener(InventoryEvent event) {
 
-        return isInventory != null;
+        InventoryRequest request = inventoryMapper.toInventoryRequest(event.getInventoryDTO());
+
+        Inventory inventory = createInventory(request);
+
+        List<InventoryItemRequest> itemRequests = (List<InventoryItemRequest>) event.getProdVariantId().stream()
+                .map(prodVariantId -> InventoryItemRequest.builder()
+                .inventoryId(inventory.getId())
+                .prodVariantId(prodVariantId)
+                .build())
+                .collect(Collectors.toList());
+        rabbitTemplate.convertAndSend(exchange, "create-inventory-item", new InventoryItemWrapper(itemRequests));
     }
 
     @Override
@@ -68,7 +80,14 @@ public class InventoryService implements InventoryInterface {
     public Inventory createInventory(InventoryRequest request) {
         Inventory inventory = inventoryMapper.toInventory(request);
 
-        return inventoryRepository.save(inventory);
+        logger.info("prodCode: " + inventory.getProductCode());
+        logger.info("prodId: " + inventory.getProductId());
+        logger.info("prodQuantity: " + inventory.getQuantity());
+        logger.info("prodIsAllow: " + inventory.getIsAllowed());
+
+        inventoryRepository.save(inventory);
+
+        return inventory;
     }
 
     @Override

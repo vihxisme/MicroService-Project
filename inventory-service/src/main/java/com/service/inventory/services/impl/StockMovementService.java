@@ -2,13 +2,10 @@ package com.service.inventory.services.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -51,17 +48,15 @@ public class StockMovementService implements StockMovementInterface {
 
     private Logger logger = LoggerFactory.getLogger(StockMovementService.class);
 
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = "create-stockMovement", durable = "true"),
-            exchange = @Exchange(name = "cache-create-stockMvm-exchange", type = "direct"),
-            key = "create-stockMovement"
-    ))
-    private Boolean createStockMvmListener(List<StockMovementRequest> requests) {
-        List<StockMovement> isList = createStockMovements(requests);
-
-        return isList != null && !isList.isEmpty();
-    }
-
+    // @RabbitListener(bindings = @QueueBinding(
+    //         value = @Queue(name = "create-stockMovement", durable = "true"),
+    //         exchange = @Exchange(name = "cache-create-stockMvm-exchange", type = "direct"),
+    //         key = "create-stockMovement"
+    // ))
+    // private Boolean createStockMvmListener(List<StockMovementRequest> requests) {
+    //     List<StockMovement> isList = createStockMovements(requests);
+    //     return isList != null && !isList.isEmpty();
+    // }
     @Override
     @Transactional
     public List<StockMovement> createStockMovements(List<StockMovementRequest> requests) {
@@ -89,17 +84,27 @@ public class StockMovementService implements StockMovementInterface {
     @Override
     @Transactional
     public StockMovement updateStockMovement(StockMovementRequest request) {
-        logger.info("status: ");
         StockMovement existStockMovement = stockMovementRepository.findById(request.getId()).orElseThrow(()
                 -> new EntityNotFoundException("StockeMovement not found"));
 
-        logger.info("status: " + existStockMovement.getMovementStatus());
-
         stockMovementMapper.updateStockMovementFromRequest(request, existStockMovement);
 
-        logger.info("status: " + existStockMovement.getMovementStatus());
-
         return stockMovementRepository.save(existStockMovement);
+    }
+
+    private String generateStockMvmCode() {
+        Boolean isUnique;
+        Random random = new Random();
+        String code;
+        do {
+            int randomNumberStart = random.nextInt(100, 999);
+            int randomNumberMiddle = random.nextInt(1000, 9999);
+            int randomNumberEnd = random.nextInt(1000, 9999);
+            code = String.format("%03d-%04d-%04d", randomNumberStart, randomNumberMiddle, randomNumberEnd);
+            isUnique = !stockMovementRepository.existsByStockMovementCode(code);
+        } while (!isUnique);
+
+        return code;
     }
 
     @Override

@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,17 +15,16 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.inventory.entities.InventoryItem;
-import com.service.inventory.entities.StockMovement;
 import com.service.inventory.mappers.InventoryItemMapper;
 import com.service.inventory.repositories.ApiClient;
 import com.service.inventory.repositories.InventoryItemRepository;
 import com.service.inventory.requests.InventoryItemRequest;
 import com.service.inventory.requests.PaginationRequest;
-import com.service.inventory.requests.StockMovementRequest;
 import com.service.inventory.resources.ItemProdVariantResource;
 import com.service.inventory.resources.ItemResource;
 import com.service.inventory.responses.PaginationResponse;
 import com.service.inventory.services.interfaces.InventoryItemInterface;
+import com.service.inventory.wrappers.InventoryItemWrapper;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -47,15 +43,9 @@ public class InventoryItemService implements InventoryItemInterface {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = "create-stockMovement", durable = "true"),
-            exchange = @Exchange(name = "cache-create-stockMvm-exchange", type = "direct"),
-            key = "create-stockMovement"
-    ))
-    private Boolean createStockMvmListener(List<InventoryItemRequest> requests) {
-        List<InventoryItem> isList = createInventoryItem(requests);
-
-        return isList != null && !isList.isEmpty();
+    @RabbitListener(queues = "create-inventory-item:queue")
+    public void createInventoryItemListener(InventoryItemWrapper wrapper) {
+        createInventoryItem(wrapper.getInventoryItemRequests());
     }
 
     @Override
