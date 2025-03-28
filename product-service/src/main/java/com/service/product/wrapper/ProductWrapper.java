@@ -19,6 +19,7 @@ public class ProductWrapper {
 
     private ProductRequest productRequest;
 
+    //productVariantRequest
     private List<Integer> colorIds;
     private List<Integer> sizeIds;
     private List<String> colorImageUrls;
