@@ -4,8 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
-import com.service.inventory.dtos.UpdateVariantQuantityDTO;
+import com.service.events.dto.UpdateVariantQuantityDTO;
 import com.service.inventory.entities.InventoryItem;
 
 import jakarta.persistence.PostPersist;
@@ -19,6 +20,9 @@ public class InventoryItemListener {
 
     private Logger logger = LoggerFactory.getLogger(InventoryItemListener.class);
 
+    @Value("${rabbitmq.exchange.product}")
+    private String productExchange;
+
     @PostPersist
     @PostUpdate
     @PostRemove
@@ -29,8 +33,8 @@ public class InventoryItemListener {
 
             if (inventoryItem.getItemQuantity() != null) {
                 rabbitTemplate.convertAndSend(
-                        "update-variant-quantity-exchange",
-                        "update-quantity",
+                        productExchange,
+                        "update-variant-quantity",
                         UpdateVariantQuantityDTO.builder()
                                 .prodVariantId(inventoryItem.getProdVariantId())
                                 .quantity(inventoryItem.getItemQuantity())
