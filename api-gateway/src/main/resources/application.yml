@@ -15,7 +15,7 @@ spring:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=${app.api-prefix}/identity/**
+            - Path=${app.api-prefix}/identity/v1/**
           filters:
             - StripPrefix=1
             # - PreserveHostHeader=true
@@ -25,7 +25,49 @@ spring:
         - id: customer-service
           uri: lb://customer-service
           predicates:
-            - Path=${app.api-prefix}/customer/profile/**
+            - Path=${app.api-prefix}/v1/customer/**
+          filters:
+            - StripPrefix=1
+
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=${app.api-prefix}/product/v1/**
+          filters:
+            - StripPrefix=1
+
+        - id: discount-service
+          uri: lb://discount-service
+          predicates:
+            - Path=${app.api-prefix}/discount/v1/**
+          filters:
+            - StripPrefix=1
+
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=${app.api-prefix}/inventory/v1/**
+          filters:
+            - StripPrefix=1
+
+        - id: cart-service
+          uri: lb://cart-service
+          predicates:
+            - Path=${app.api-prefix}/cart/v1/**
+          filters:
+            - StripPrefix=1
+
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=${app.api-prefix}/order/v1/**
+          filters:
+            - StripPrefix=1
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=${app.api-prefix}/payment/v1/**
           filters:
             - StripPrefix=1
 
@@ -49,7 +91,3 @@ logging:
 
   level:
     org.springframework.cloud.gateway: DEBUG
-# jwt
-#   secret: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
-#   expiration: 86400000
-#   issuer: http://api.auth-service.com
