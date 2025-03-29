@@ -28,13 +28,6 @@ public class ProductController {
     @Autowired
     private ProductInterface productInterface;
 
-//     @PostMapping("/create")
-//     public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
-//         return ResponseEntity.ok(
-//                 new SuccessResponse<>(
-//                         "SUCCESS",
-//                         productInterface.createProduct(request)));
-//     }
     @PostMapping("/create")
     public ResponseEntity<?> createProduct(@RequestBody ProductWrapper request) {
         return ResponseEntity.ok(
@@ -67,6 +60,7 @@ public class ProductController {
                         productInterface.getAllProduct(request)));
     }
 
+    // lấy ra danh sách sản phẩm kèm khuyến mãi (nếu có)
     @GetMapping("/with-discount")
     public ResponseEntity<?> getProductWithDiscount(@ModelAttribute PaginationRequest request) {
         return ResponseEntity.ok(
@@ -75,6 +69,7 @@ public class ProductController {
                         productInterface.getProductWithDiscount(request)));
     }
 
+    // lấy danh sách sản phẩm theo danh mục
     @GetMapping("/by-categorie")
     public ResponseEntity<?> getProductWithDiscountbyCategorie(@RequestParam String categorieId, @ModelAttribute PaginationRequest request) {
         return ResponseEntity.ok(
@@ -83,6 +78,7 @@ public class ProductController {
                         productInterface.getProductWithDiscountByCategorie(categorieId, request)));
     }
 
+    // lấy ra danh sách sản phẩm đang được khuyến mãi
     @GetMapping("/only-discount")
     public ResponseEntity<?> getOnlyProductDiscount(@ModelAttribute PaginationRequest request) {
         return ResponseEntity.ok(

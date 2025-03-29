@@ -25,47 +25,48 @@ import com.service.customer.responses.SuccessResponse;
 import com.service.customer.services.interfaces.AddressInterface;
 
 @RestController
-@RequestMapping("/profile")
+@RequestMapping("/v1/address")
 public class AddressController {
-  @Autowired
-  private AddressInterface addressInterface;
 
-  @PostMapping("/address/add")
-  public ResponseEntity<?> addAddress(@RequestBody AddAddressRequest request) {
-    Address address = addressInterface.addAddress(request);
+    @Autowired
+    private AddressInterface addressInterface;
 
-    SuccessResponse<Address> success = new SuccessResponse<>("SUCCESS", address);
-    return ResponseEntity.status(HttpStatus.CREATED).body(success);
-  }
+    @PostMapping("/add")
+    public ResponseEntity<?> addAddress(@RequestBody AddAddressRequest request) {
+        Address address = addressInterface.addAddress(request);
 
-  @PutMapping("/address/update")
-  public ResponseEntity<?> updateAddress(@RequestBody UpdateAddrerssRequest request) {
-    Address address = addressInterface.updateAddress(request);
-
-    SuccessResponse<Address> success = new SuccessResponse<>("SUCCESS", address);
-    return ResponseEntity.ok().body(success);
-  }
-
-  @DeleteMapping("/address/delete/{id}")
-  public ResponseEntity<?> deleteAddress(@PathVariable Long id) {
-    Boolean isAddress = addressInterface.deleteAddress(id);
-
-    if (isAddress) {
-      SuccessResponse<Boolean> success = new SuccessResponse<>("SUCCESS", isAddress);
-      return ResponseEntity.ok().body(success);
-    } else {
-      Map<String, String> errors = new HashMap<>();
-      errors.put("message", "Error: Data not found");
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body(new ErrorResponse(404, "NOT_FOUND", errors));
+        SuccessResponse<Address> success = new SuccessResponse<>("SUCCESS", address);
+        return ResponseEntity.status(HttpStatus.CREATED).body(success);
     }
-  }
 
-  @GetMapping("/address/{customerId}")
-  public ResponseEntity<?> getAddress(@PathVariable String customerId) {
-    List<Address> list = addressInterface.getAllAddressByCustomer(UUID.fromString(customerId));
+    @PutMapping("/update")
+    public ResponseEntity<?> updateAddress(@RequestBody UpdateAddrerssRequest request) {
+        Address address = addressInterface.updateAddress(request);
 
-    SuccessResponse<List<Address>> success = new SuccessResponse<>("SUCCESS", list);
-    return ResponseEntity.ok().body(success);
-  }
+        SuccessResponse<Address> success = new SuccessResponse<>("SUCCESS", address);
+        return ResponseEntity.ok().body(success);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteAddress(@PathVariable Long id) {
+        Boolean isAddress = addressInterface.deleteAddress(id);
+
+        if (isAddress) {
+            SuccessResponse<Boolean> success = new SuccessResponse<>("SUCCESS", isAddress);
+            return ResponseEntity.ok().body(success);
+        } else {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", "Error: Data not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse(404, "NOT_FOUND", errors));
+        }
+    }
+
+    @GetMapping("/info/{customerId}")
+    public ResponseEntity<?> getAddress(@PathVariable String customerId) {
+        List<Address> list = addressInterface.getAllAddressByCustomer(UUID.fromString(customerId));
+
+        SuccessResponse<List<Address>> success = new SuccessResponse<>("SUCCESS", list);
+        return ResponseEntity.ok().body(success);
+    }
 }

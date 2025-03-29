@@ -25,41 +25,41 @@ import com.service.customer.services.interfaces.CustomerInterface;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/profile")
+@RequestMapping("/v1/customer")
 public class CustomerController {
 
-  @Autowired
-  private CustomerInterface customerInterface;
+    @Autowired
+    private CustomerInterface customerInterface;
 
-  @PutMapping("/info/update")
-  public ResponseEntity<?> updateInfoCustomer(@Valid @RequestBody UpdateInfoCustomerRequest request) {
-    Customer customer = customerInterface.updateInfoCustomer(request);
+    @PutMapping("/info/update")
+    public ResponseEntity<?> updateInfoCustomer(@Valid @RequestBody UpdateInfoCustomerRequest request) {
+        Customer customer = customerInterface.updateInfoCustomer(request);
 
-    SuccessResponse<Customer> success = new SuccessResponse<>("SUCCESS", customer);
-    return ResponseEntity.ok(success);
-  }
+        SuccessResponse<Customer> success = new SuccessResponse<>("SUCCESS", customer);
+        return ResponseEntity.ok(success);
+    }
 
-  @PutMapping("/info/update-avatar")
-  public ResponseEntity<?> updateAvatar(@Valid @RequestBody AvatarRequest request) {
-    AvatarResource resource = customerInterface.updateAvatar(request);
+    @PutMapping("/info/update-avatar")
+    public ResponseEntity<?> updateAvatar(@Valid @RequestBody AvatarRequest request) {
+        AvatarResource resource = customerInterface.updateAvatar(request);
 
-    SuccessResponse<AvatarResource> success = new SuccessResponse<>("SUCCESS", resource);
-    return ResponseEntity.ok(success);
-  }
+        SuccessResponse<AvatarResource> success = new SuccessResponse<>("SUCCESS", resource);
+        return ResponseEntity.ok(success);
+    }
 
-  @GetMapping("/info/{id}")
-  public ResponseEntity<?> getCustomer(@PathVariable String id) {
-    Customer customer = customerInterface.getCustomer(UUID.fromString(id));
+    @GetMapping("/info/{id}")
+    public ResponseEntity<?> getCustomer(@PathVariable String id) {
+        Customer customer = customerInterface.getCustomer(UUID.fromString(id));
 
-    SuccessResponse<Customer> success = new SuccessResponse<>("SUCCESS", customer);
-    return ResponseEntity.ok(success);
-  }
+        SuccessResponse<Customer> success = new SuccessResponse<>("SUCCESS", customer);
+        return ResponseEntity.ok(success);
+    }
 
-  @GetMapping("/info/all")
-  public ResponseEntity<?> getAllCustomer(@ModelAttribute PaginationRequest request) {
-    PaginationResponse<CustomerProfileResource> response = customerInterface.getAllCustomer(request);
+    @GetMapping("/info/all")
+    public ResponseEntity<?> getAllCustomer(@ModelAttribute PaginationRequest request) {
+        PaginationResponse<CustomerProfileResource> response = customerInterface.getAllCustomer(request);
 
-    SuccessResponse<PaginationResponse<CustomerProfileResource>> success = new SuccessResponse<>("SUCCESS", response);
-    return ResponseEntity.ok(success);
-  }
+        SuccessResponse<PaginationResponse<CustomerProfileResource>> success = new SuccessResponse<>("SUCCESS", response);
+        return ResponseEntity.ok(success);
+    }
 }

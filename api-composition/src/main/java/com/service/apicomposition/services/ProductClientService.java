@@ -136,6 +136,7 @@ public class ProductClientService {
 
     }
 
+    // tổng hợp dữ liệu lấy được từ product-service và discount-service (chỉ lấy những sản phẩm khuyến mãi)
     private Mono<PaginationResponse<ProdWithDiscountResource>> fetchProductandDiscount(
             Mono<PaginationResponse<ProductClientResource>> productPageMono,
             Mono<List<DiscountClientResource>> discountListMono) {
