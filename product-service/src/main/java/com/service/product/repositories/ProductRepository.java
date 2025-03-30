@@ -22,17 +22,17 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     Page<Product> findAll(Pageable pageable);
 
     @Query("""
-      SELECT p FROM Product p WHERE p.status != 'INACTIVE'
+      SELECT p FROM Product p WHERE p.status != 'INACTIVE' ORDER BY p.createdAt DESC
       """)
     List<Product> findAllElseInactive();
 
     @Query("""
-      SELECT p FROM Product p WHERE p.categorie = :categorie
+      SELECT p FROM Product p WHERE p.categorie = :categorie ORDER BY p.createdAt DESC
       """)
     Page<Product> findAllByCategorie(@Param("categorie") Categorie categorie, Pageable pageable);
 
     @Query("""
-      SELECT p FROM Product p WHERE p.status != 'INACTIVE'
+      SELECT p FROM Product p WHERE p.status != 'INACTIVE' ORDER BY p.createdAt DESC
       """)
     Page<Product> findAllElseInactive(Pageable pageable);
 

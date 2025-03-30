@@ -87,4 +87,13 @@ public class ProductController {
                         productInterface.getOnlyProductDiscount(request)));
     }
 
+    @GetMapping("/new")
+    public ResponseEntity<?> getNewProducts(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getNewProducts(request))
+        );
+    }
+
 }

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -205,7 +206,7 @@ public class ProductService implements ProductInterface {
 
     @Override
     public PaginationResponse<Product> getAllProduct(PaginationRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
 
         Page<Product> prosducts = productRepository.findAll(pageable);
 
@@ -234,7 +235,7 @@ public class ProductService implements ProductInterface {
         Categorie categorie = categorieRepository.findById(categoriId)
                 .orElseThrow(() -> new EntityNotFoundException("Categorie not found"));
 
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
 
         Page<Product> productsByCategorie = productRepository.findAllByCategorie(categorie, pageable);
 
@@ -258,7 +259,7 @@ public class ProductService implements ProductInterface {
 
     @Override
     public PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
 
         Page<Product> products = productRepository.findAllElseInactive(pageable);
 
@@ -311,6 +312,17 @@ public class ProductService implements ProductInterface {
     @Override
     public List<ProdAndStatusResource> getProdAndStatus(List<UUID> ids) {
         return productRepository.findProdAndStatusByProdId(ids);
+    }
+
+    @Override
+    public PaginationResponse<ProductWithDiscountResource> getNewProducts(PaginationRequest request) {
+        ResponseEntity<?> response = apiClient.getProductWithDiscount(request.getPage(), request.getSize());
+
+        PaginationResponse<ProductWithDiscountResource> paginationResponse = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        });
+
+        return paginationResponse;
     }
 
 }

@@ -40,4 +40,6 @@ public interface ProductInterface {
     PaginationResponse<ProductWithDiscountResource> getOnlyProductDiscount(PaginationRequest request);
 
     List<ProdAndStatusResource> getProdAndStatus(List<UUID> ids);
+
+    PaginationResponse<ProductWithDiscountResource> getNewProducts(PaginationRequest request);
 }

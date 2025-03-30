@@ -1,6 +1,7 @@
 package com.service.product.resources;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 import lombok.Builder;
@@ -24,4 +25,5 @@ public class ProductWithDiscountResource {
     private final BigDecimal minOrderValue;
     private final BigDecimal finalPrice;
     private final String targetType;
+    private final Timestamp createdAt;
 }
