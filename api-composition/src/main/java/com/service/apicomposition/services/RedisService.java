@@ -1,6 +1,8 @@
 package com.service.apicomposition.services;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -71,5 +74,58 @@ public class RedisService {
         } catch (Exception e) {
             return Mono.error(new RuntimeException("Cannot clear cache: " + e.getMessage()));
         }
+    }
+
+    // public <T> Mono<Boolean> saveList(String key, List<T> data, long ttlInSeconds) {
+    //     return reactiveRedisTemplate.delete(key)
+    //             .thenMany(Flux.fromIterable(data))
+    //             .flatMap(item -> {
+    //                 Map<String, Object> map = objectMapper.convertValue(item, new TypeReference<Map<String, Object>>() {});
+    //                 return reactiveRedisTemplate.opsForList().rightPush(key, map);
+    //             })
+    //             .then(reactiveRedisTemplate.expire(key, Duration.ofSeconds(ttlInSeconds)))
+    //             .thenReturn(true)
+    //             .doOnSuccess(v -> logger.info("Saved list to Redis key: {}", key))
+    //             .doOnError(e -> logger.error("Error saving list to Redis: {}", e.getMessage()));
+    // }
+    public <T> Mono<Boolean> saveList(String key, List<T> data, long ttlInSeconds) {
+        return reactiveRedisTemplate.delete(key)
+                .thenMany(Flux.fromIterable(data))
+                .flatMap(item -> reactiveRedisTemplate.opsForList().rightPush(key, objectMapper.convertValue(item, Map.class)))
+                .then(reactiveRedisTemplate.expire(key, Duration.ofSeconds(ttlInSeconds)))
+                .thenReturn(true)
+                .doOnSuccess(v -> logger.info("Saved list to Redis key: {}", key))
+                .doOnError(e -> logger.error("Error saving list to Redis: {}", e.getMessage()));
+    }
+
+    // public <T> Mono<List<T>> getListRange(String key, long start, long end, Class<T> clazz) {
+    //     return reactiveRedisTemplate.opsForList()
+    //     .range(key, start, end)
+    //     .map(item -> objectMapper.convertValue(item, clazz))
+    //             .collectList()
+    //             .filter(list -> !list.isEmpty());
+    // }
+    public <T> Mono<List<T>> getListRange(String key, long start, long end, Class<T> clazz) {
+        return reactiveRedisTemplate.opsForList()
+                .range(key, start, end)
+                .map(item -> objectMapper.convertValue(item, clazz))
+                .collectList()
+                .filter(list -> !list.isEmpty());
+    }
+
+    public Mono<Long> getListSize(String key) {
+        return reactiveRedisTemplate.opsForList().size(key);
+    }
+
+    private <T> String serialize(T data) {
+        try {
+            return objectMapper.writeValueAsString(data);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Serialization error", e);
+        }
+    }
+
+    private <T> T deserialize(Object data, Class<T> clazz) {
+        return objectMapper.convertValue(data, clazz);
     }
 }

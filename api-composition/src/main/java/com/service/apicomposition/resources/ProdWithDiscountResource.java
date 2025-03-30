@@ -1,6 +1,7 @@
 package com.service.apicomposition.resources;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -49,6 +50,9 @@ public class ProdWithDiscountResource {
     @JsonProperty("targetType")
     private final String targetType;
 
+    @JsonProperty("createdAt")
+    private final Timestamp createdAt;
+
     @JsonCreator
     public ProdWithDiscountResource(
             @JsonProperty("id") UUID id,
@@ -62,7 +66,8 @@ public class ProdWithDiscountResource {
             @JsonProperty("discountAmount") BigDecimal discountAmount,
             @JsonProperty("minOrderValue") BigDecimal minOrderValue,
             @JsonProperty("finalPrice") BigDecimal finalPrice,
-            @JsonProperty("targetType") String targetType) {
+            @JsonProperty("targetType") String targetType,
+            @JsonProperty("createdAt") Timestamp createdAt) {
         this.id = id;
         this.productCode = productCode;
         this.categorieId = categorieId;
@@ -75,5 +80,6 @@ public class ProdWithDiscountResource {
         this.minOrderValue = minOrderValue;
         this.finalPrice = finalPrice;
         this.targetType = targetType;
+        this.createdAt = createdAt;
     }
 }
