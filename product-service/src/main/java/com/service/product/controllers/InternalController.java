@@ -60,4 +60,9 @@ public class InternalController {
         return ResponseEntity.ok(productInterface.getProdAndStatus(productIds));
     }
 
+    @GetMapping("/products/all")
+    public ResponseEntity<?> getAllProduct() {
+        return ResponseEntity.ok(productInterface.getAllProductElseInactive());
+    }
+
 }
