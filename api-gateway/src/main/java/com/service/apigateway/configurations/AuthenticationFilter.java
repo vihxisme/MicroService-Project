@@ -40,7 +40,12 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         "/identity/auth/.*",
         "/identity/authenticated/.*",
         "/product/v1/products/only-discount",
-        "/v1/products/info/all",};
+        "/product/v1/categorie/info/all",
+        "/product/v1/products/by-categorie",
+        "/product/v1/products/new",
+        "/product/v1/products/apparel-type",
+        "/product/v1/products/detail-info",
+        "/ws/.*"};
 
     @Value("${app.api-prefix}")
     private String apiPrefix;
@@ -49,8 +54,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
 
+        logger.info("url: " + request.getPath());
+        logger.info("Request: " + request.getMethod() + " " + request.getURI());
+
         // Kiểm tra nếu request là public API (bỏ qua xác thực)
-        if (isPublicEndpoint(request)) {
+        if (isPublicEndpoint(request) || isWebSocketRequest(request)) {
             return chain.filter(exchange);
         }
 
@@ -81,6 +89,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String path = request.getURI().getPath();
         return Arrays.stream(PUBLIC_ENDPOINT)
                 .anyMatch(endpoint -> path.matches(apiPrefix + endpoint));
+    }
+
+    private boolean isWebSocketRequest(ServerHttpRequest request) {
+        List<String> upgradeHeaders = request.getHeaders().get(HttpHeaders.UPGRADE);
+        return upgradeHeaders != null && upgradeHeaders.contains("websocket");
     }
 
     private Mono<Void> unauthorizedResponse(ServerHttpResponse response) {

@@ -71,6 +71,15 @@ spring:
           filters:
             - StripPrefix=1
 
+        # 🔹 Chuyển tiếp WebSocket của product-service
+        - id: product-websocket
+          uri: lb://product-service
+          predicates:
+            - Path=/ws/product/**
+            - Header=Upgrade, websocket # Chỉ áp dụng cho WebSocket
+          filters:
+            - PreserveHostHeader
+
   output:
     ansi:
       enable: always
