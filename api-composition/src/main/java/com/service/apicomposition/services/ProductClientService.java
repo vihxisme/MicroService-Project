@@ -3,6 +3,7 @@ package com.service.apicomposition.services;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +18,13 @@ import com.service.apicomposition.mappers.ComponentMapper;
 import com.service.apicomposition.mappers.ProductDiscountMapper;
 import com.service.apicomposition.requests.PaginationRequest;
 import com.service.apicomposition.resources.DiscountClientResource;
+import com.service.apicomposition.resources.ProdAllInfoResource;
+import com.service.apicomposition.resources.ProdWithDiscountAllInfoResource;
 import com.service.apicomposition.resources.ProductClientResource;
 import com.service.apicomposition.resources.ProdWithDiscountResource;
 import com.service.apicomposition.responses.PaginationResponse;
 
+import jakarta.ws.rs.core.UriBuilder;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -58,6 +62,19 @@ public class ProductClientService {
                 });
     }
 
+    private Mono<PaginationResponse<ProductClientResource>> fetchProductByApparelTypePageMono(String path, int apparelType, int page, int size) {
+        return productClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("apparelType", apparelType)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<PaginationResponse<ProductClientResource>>() {
+                });
+    }
+
     private Mono<PaginationResponse<ProductClientResource>> fetchProductPageMonoByCategorie(String path, String categorieId, int page, int size) {
         return productClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -86,6 +103,18 @@ public class ProductClientService {
                 .uri(path)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<ProductClientResource>>() {
+                });
+    }
+
+    // lấy ra sản phẩm từ product-service từ id
+    private Mono<ProdAllInfoResource> fectProductAllInfoMono(UUID id, String path) {
+        return productClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("id", id)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ProdAllInfoResource>() {
                 });
     }
 
@@ -181,6 +210,46 @@ public class ProductClientService {
                 .doOnError(error -> logger.error("Error: ", error));
     }
 
+    /**
+     * Fetch thông tin chi tiết của một sản phẩm kèm theo thông tin giảm giá phù
+     * hợp.
+     *
+     * @param prodAllInfoMono Mono chứa thông tin đầy đủ của sản phẩm.
+     * @param discountListMono Mono chứa danh sách tất cả các discount đang hoạt
+     * động.
+     * @return Mono chứa thông tin sản phẩm kèm discount (nếu có).
+     */
+    private Mono<ProdWithDiscountAllInfoResource> fetchProdWithDiscountAllInfoById(
+            Mono<ProdAllInfoResource> prodAllInfoMono,
+            Mono<List<DiscountClientResource>> discountListMono
+    ) {
+        return Mono.zip(prodAllInfoMono, discountListMono)
+                .map(tuple -> {
+                    ProdAllInfoResource product = tuple.getT1();
+                    List<DiscountClientResource> discountList = tuple.getT2();
+
+                    // Lọc ra discount phù hợp nhất cho sản phẩm này
+                    DiscountClientResource discount = discountList.stream()
+                            .filter(d
+                                    -> // Discount áp dụng cho tất cả sản phẩm (targetId null)
+                                    (d.getTargetId() == null && TargetTypeEnum.PRODUCT.toString().equals(d.getTargetType()))
+                            // Hoặc áp dụng cho sản phẩm cụ thể
+                            || (TargetTypeEnum.PRODUCT.toString().equals(d.getTargetType())
+                            && Objects.equals(d.getTargetId(), product.getId()))
+                            // Hoặc áp dụng theo category
+                            || (TargetTypeEnum.CATEGORIE.toString().equals(d.getTargetType())
+                            && Objects.equals(d.getTargetId(), product.getCategorieId()))
+                            )
+                            .findFirst()
+                            .orElse(null); // Nếu không có discount phù hợp, trả về null
+
+                    // Map dữ liệu sang ProdWithDiscountAllInfoResource để trả về
+                    return productDiscountMapper.toProdWithDiscountAllInfoResource(product, discount, componentMapper);
+                })
+                .doOnSuccess(result -> logger.info("Result: {}", result))
+                .doOnError(error -> logger.error("Error: ", error));
+    }
+
     // lấy ra danh sách product từ redis, nếu không có trong redis sẽ call api để tổng hợp dữ liệu để đẩy lên redis
     public Mono<PaginationResponse<ProdWithDiscountResource>> getProductWithDiscount(PaginationRequest request) {
         String cacheKey = String.format("prod:discount:%d:%d", request.getPage(), request.getSize());
@@ -262,6 +331,38 @@ public class ProductClientService {
                 .then() // Trả về Mono<Void>
                 .doOnSuccess(v -> logger.info("Synced discounted products to Redis"))
                 .doOnError(e -> logger.error("Error syncing discounted products: {}", e.getMessage()));
+    }
+
+    // lấy danh sách product thuộc nhóm categorie theo apparelType từ redis, nếu không có trong redis sẽ call api để tổng hợp dữ liệu để đẩy lên redis
+    public Mono<PaginationResponse<ProdWithDiscountResource>> getProdWithDiscountWithByCateApparelType(Integer apparelType, PaginationRequest request) {
+        String cacheKey = String.format("prod:discount:apparel:%d:%d:%d", apparelType, request.getPage(), request.getSize());
+        final long DURATION_TTL = 3600;
+
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<ProdWithDiscountResource>>() {
+        })
+                .switchIfEmpty(fetchProductsWithDiscount(
+                        fetchProductByApparelTypePageMono("/internal/products/apparel-type", apparelType, request.getPage(), request.getSize()),
+                        fetchDiscountListMono("/internal/discount-client/info")
+                )
+                )
+                .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data));
+    }
+
+    /**
+     * Lấy thông tin chi tiết của một sản phẩm kèm theo thông tin giảm giá áp
+     * dụng (nếu có).
+     *
+     * @param productId UUID của sản phẩm cần lấy thông tin.
+     * @return Mono<ProdWithDiscountAllInfoResource> chứa thông tin sản phẩm kèm
+     * discount (nếu có).
+     */
+    public Mono<ProdWithDiscountAllInfoResource> getProdWithDiscountAllInfoById(UUID productId) {
+        return fetchProdWithDiscountAllInfoById(
+                // Fetch thông tin chi tiết của sản phẩm từ API nội bộ
+                fectProductAllInfoMono(productId, "/internal/products/detail-info"),
+                // Fetch danh sách các discount đang hoạt động từ API nội bộ
+                fetchDiscountListMono("/internal/discount-client/info")
+        );
     }
 
 }

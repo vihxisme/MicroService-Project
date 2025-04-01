@@ -1,5 +1,7 @@
 package com.service.apicomposition.controllers;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,4 +62,24 @@ public class API_ProductClientController {
                 .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Network Error")));
     }
 
+    @GetMapping("/apparel-type")
+    public Mono<ResponseEntity<Object>> getOnlyProdWithDiscountByCateApparelType(ServerWebExchange exchange) {
+        Integer apparelType = Integer.valueOf(exchange.getRequest().getQueryParams().getFirst("apparelType"));
+        int page = Integer.parseInt(exchange.getRequest().getQueryParams().getFirst("page"));
+        int size = Integer.parseInt(exchange.getRequest().getQueryParams().getFirst("size"));
+        PaginationRequest request = PaginationRequest.builder().page(page).size(size).build();
+
+        return productClientService.getProdWithDiscountWithByCateApparelType(apparelType, request)
+                .map(data -> ResponseEntity.ok((Object) data))
+                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Network Error")));
+    }
+
+    @GetMapping("/detail-info")
+    public Mono<ResponseEntity<Object>> getProdWithDiscountAllInfoById(ServerWebExchange exchange) {
+        UUID productId = UUID.fromString(exchange.getRequest().getQueryParams().getFirst("id"));
+
+        return productClientService.getProdWithDiscountAllInfoById(productId)
+                .map(data -> ResponseEntity.ok((Object) data))
+                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Network Error")));
+    }
 }
