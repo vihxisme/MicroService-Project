@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -48,4 +49,15 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             p.id IN :ids
           """)
     List<ProdAndStatusResource> findProdAndStatusByProdId(@Param("ids") List<UUID> ids);
+
+    @Query("""
+      SELECT p FROM Product p WHERE p.categorie.apparelType = :apparelType ORDER BY p.createdAt DESC
+      """)
+    Page<Product> findByCateApparelType(@Param("apparelType") Integer apparelType, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"productVariants.color", "productVariants.size", "productImages", "productDetails"})
+    @Query("""
+        SELECT p FROM Product p WHERE p.id = :id AND p.status != 'INACTIVE' ORDER BY p.createdAt DESC
+        """)
+    Product findByIdWithProductAllInfo(@Param("id") UUID id);
 }

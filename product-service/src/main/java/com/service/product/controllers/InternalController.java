@@ -65,4 +65,13 @@ public class InternalController {
         return ResponseEntity.ok(productInterface.getAllProductElseInactive());
     }
 
+    @GetMapping("/products/apparel-type")
+    public ResponseEntity<?> getProdByCateApparelType(@RequestParam Integer apparelType, @ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(productInterface.getProdByCateApparelType(apparelType, request));
+    }
+
+    @GetMapping("/products/detail-info")
+    public ResponseEntity<?> getProdAllInfoById(@RequestParam UUID id) {
+        return ResponseEntity.ok(productInterface.getProductAllInfoById(id));
+    }
 }

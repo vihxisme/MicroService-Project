@@ -1,5 +1,7 @@
 package com.service.product.repositories;
 
+import java.util.UUID;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,4 +18,10 @@ public interface ApiClient {
 
     @GetMapping("/product-client/only-discount")
     ResponseEntity<?> getOnlyProductDiscount(@RequestParam int page, @RequestParam int size);
+
+    @GetMapping("/product-client/apparel-type")
+    ResponseEntity<?> getProdWithDiscountByCateApparel(@RequestParam Integer apparelType, @RequestParam int page, @RequestParam int size);
+
+    @GetMapping("/product-client/detail-info")
+    ResponseEntity<?> getProdWithDiscountAllInfoById(@RequestParam UUID id);
 }

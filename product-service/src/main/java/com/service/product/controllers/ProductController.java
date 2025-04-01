@@ -87,6 +87,7 @@ public class ProductController {
                         productInterface.getOnlyProductDiscount(request)));
     }
 
+    // lấy ra danh sách sản phẩm mới
     @GetMapping("/new")
     public ResponseEntity<?> getNewProducts(@ModelAttribute PaginationRequest request) {
         return ResponseEntity.ok(
@@ -96,4 +97,22 @@ public class ProductController {
         );
     }
 
+    // lấy ra danh sách sản phẩm với mã giảm giá theo apparelType của categorie
+    @GetMapping("/apparel-type")
+    public ResponseEntity<?> getProdWithDiscountByCateApparelType(@RequestParam Integer apparelType, @ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getProdWithDiscountByCateApparelType(apparelType, request))
+        );
+    }
+
+    @GetMapping("/detail-info")
+    public ResponseEntity<?> getProdWithDiscountById(@RequestParam UUID id) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getProdWithDiscountAllInfoById(id))
+        );
+    }
 }

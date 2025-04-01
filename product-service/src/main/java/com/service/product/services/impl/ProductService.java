@@ -37,7 +37,9 @@ import com.service.product.requests.ProductDetailRequest;
 import com.service.product.requests.ProductImageRequest;
 import com.service.product.requests.ProductRequest;
 import com.service.product.requests.VariantRequest;
+import com.service.product.resources.ProdAllInfoResource;
 import com.service.product.resources.ProdAndStatusResource;
+import com.service.product.resources.ProdWithDiscountAllInfoResource;
 import com.service.product.resources.ProductResource;
 import com.service.product.resources.ProductVariantResource;
 import com.service.product.resources.ProductWithDiscountResource;
@@ -189,6 +191,9 @@ public class ProductService implements ProductInterface {
         return true;
     }
 
+    /*
+     * tạo mã productCode ngẫu nhiên hợp lệ
+     */
     private String generateProductCode() {
         Boolean isUnique;
         Random random = new Random();
@@ -204,6 +209,9 @@ public class ProductService implements ProductInterface {
         return code;
     }
 
+    /*
+     * lấy ra danh sách tất cả sản phẩm
+     */
     @Override
     public PaginationResponse<Product> getAllProduct(PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
@@ -219,6 +227,9 @@ public class ProductService implements ProductInterface {
                 .build();
     }
 
+    /*
+     * lấy ra dánh sách sản phẩm có status != 'INACTIVE'
+     */
     @Override
     public List<ProductResource> getAllProductElseInactive() {
         List<Product> products = productRepository.findAllElseInactive();
@@ -230,6 +241,9 @@ public class ProductService implements ProductInterface {
         return productResources;
     }
 
+    /*
+     * lấy ra danh sách sản phẩm theo categorie
+     */
     @Override
     public PaginationResponse<ProductResource> getAllProductByCategorie(UUID categoriId, PaginationRequest request) {
         Categorie categorie = categorieRepository.findById(categoriId)
@@ -250,6 +264,9 @@ public class ProductService implements ProductInterface {
                 .build();
     }
 
+    /*
+     * lấy ra tên sản phẩm từ productId
+     */
     @Override
     public Map<UUID, String> getProductName(List<UUID> productIds) {
         return productRepository.findAllById(productIds)
@@ -257,6 +274,9 @@ public class ProductService implements ProductInterface {
                 .collect(Collectors.toMap(Product::getId, Product::getName));
     }
 
+    /*
+     * lấy ra danh sách sản phẩm hợp lệ (!INACTIVE)
+     */
     @Override
     public PaginationResponse<ProductResource> getAllProductElseInactive(PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
@@ -274,6 +294,10 @@ public class ProductService implements ProductInterface {
                 .build();
     }
 
+    /*
+     * lấy ra danh sách sản phẩm cùng với giá trị khuyến mãi (nếu có)
+     * (fetch dũ liệu từ product-service và discount-service)
+     */
     @Override
     public PaginationResponse<ProductWithDiscountResource> getProductWithDiscount(PaginationRequest request) {
         ResponseEntity<?> resource = apiClient.getProductWithDiscount(request.getPage(), request.getSize());
@@ -286,6 +310,10 @@ public class ProductService implements ProductInterface {
         return paginationResponse;
     }
 
+    /*
+     * lấy ra danh sách sản phẩm cùng với giá trị khuyến mãi (nếu có) theo categoryId 
+     * (fetch dũ liệu từ product-service và discount-service)
+     */
     @Override
     public PaginationResponse<ProductWithDiscountResource> getProductWithDiscountByCategorie(String categorieId,
             PaginationRequest request) {
@@ -298,6 +326,10 @@ public class ProductService implements ProductInterface {
         return paginationResponse;
     }
 
+    /*
+     * lấy ra danh sách những sản phẩm khuyến mãi 
+     * (fetch dũ liệu từ product-service và discount-service)
+     */
     @Override
     public PaginationResponse<ProductWithDiscountResource> getOnlyProductDiscount(PaginationRequest request) {
         ResponseEntity<?> response = apiClient.getOnlyProductDiscount(request.getPage(), request.getSize());
@@ -314,6 +346,10 @@ public class ProductService implements ProductInterface {
         return productRepository.findProdAndStatusByProdId(ids);
     }
 
+    /*
+     * lấy ra danh sách sản phẩm mới từ product cùng với giá trị khuyến mãi từ discount-service (nếu có)
+     * (fetch dữ liệu từ product-service và discount-service)
+     */
     @Override
     public PaginationResponse<ProductWithDiscountResource> getNewProducts(PaginationRequest request) {
         ResponseEntity<?> response = apiClient.getProductWithDiscount(request.getPage(), request.getSize());
@@ -323,6 +359,75 @@ public class ProductService implements ProductInterface {
         });
 
         return paginationResponse;
+    }
+
+    /*
+     * lấy ra danh sách sản phẩm theo apparelType của categorie
+     */
+    @Override
+    public PaginationResponse<ProductResource> getProdByCateApparelType(Integer apparelType, PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        Page<Product> products = productRepository.findByCateApparelType(apparelType, pageable);
+
+        Page<ProductResource> productResources = products.map(productMapper::toProductResource);
+
+        return PaginationResponse.<ProductResource>builder()
+                .content(productResources.getContent())
+                .pageNumber(productResources.getNumber())
+                .pageSize(productResources.getSize())
+                .totalPages(productResources.getTotalPages())
+                .totalElements(productResources.getTotalElements())
+                .build();
+    }
+
+    /*
+     * lấy ra danh sách sản phẩm cùng với giá trị khuyến mãi từ discount-service theo apparelType của categorie
+     * (fetch dũ liệu từ product-service và discount-service)
+     */
+    @Override
+    public PaginationResponse<ProductWithDiscountResource> getProdWithDiscountByCateApparelType(
+            Integer apparelType, PaginationRequest request) {
+        ResponseEntity<?> response = apiClient.getProdWithDiscountByCateApparel(apparelType, request.getPage(), request.getSize());
+
+        PaginationResponse<ProductWithDiscountResource> paginationResponse = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<ProductWithDiscountResource>>() {
+        });
+
+        return paginationResponse;
+    }
+
+    /*
+     * lấy ra tất cả thông tin của product theo id 
+     * (fetch dũ liệu từ product-service và discount-service)
+     */
+    @Override
+    public ProdAllInfoResource getProductAllInfoById(UUID id) {
+        Product product = productRepository.findByIdWithProductAllInfo(id);
+
+        if (product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+
+        ProdAllInfoResource prodAllInfoResource = productMapper.toProdAllInfoResource(product);
+
+        return prodAllInfoResource;
+    }
+
+    /*
+     * lấy ra tất cả thông tin sản phẩm của product cùng với giá trị khuyến mãi từ discount-service(nếu có) theo id
+     * (fetch dũ liệu từ product-service và discount-service)
+     */
+    @Override
+    public ProdWithDiscountAllInfoResource getProdWithDiscountAllInfoById(UUID id) {
+        ResponseEntity<?> response = apiClient.getProdWithDiscountAllInfoById(id);
+
+        ProdWithDiscountAllInfoResource prodWithDiscountAllInfoResource = objectMapper.convertValue(
+                response.getBody(),
+                new TypeReference<ProdWithDiscountAllInfoResource>() {
+        });
+
+        return prodWithDiscountAllInfoResource;
     }
 
 }
