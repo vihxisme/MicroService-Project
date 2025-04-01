@@ -17,15 +17,16 @@ import com.service.discount.resources.DiscountWithTargetResource;
 
 @Repository
 public interface DiscountRepository extends JpaRepository<Discount, UUID> {
-  @Modifying
-  @Query("DELETE FROM Discount d WHERE d.id = :id")
-  int deleteByIdCustom(@Param("id") UUID id);
 
-  Page<Discount> findAll(Pageable pageable);
+    @Modifying
+    @Query("DELETE FROM Discount d WHERE d.id = :id")
+    int deleteByIdCustom(@Param("id") UUID id);
 
-  Boolean existsByDiscountCode(String code);
+    Page<Discount> findAll(Pageable pageable);
 
-  @Query("""
+    Boolean existsByDiscountCode(String code);
+
+    @Query("""
       SELECT new com.service.discount.resources.DiscountClientResource(
         d.id,
         d.discountPercentage,
@@ -38,9 +39,9 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
       JOIN d.discountTargets dt
       WHERE d.isActive=true
       """)
-  List<DiscountClientResource> getAllDiscountsClient();
+    List<DiscountClientResource> getAllDiscountsClient();
 
-  @Query("""
+    @Query("""
       SELECT new com.service.discount.resources.DiscountClientResource(
         d.id,
         d.discountPercentage,
@@ -53,9 +54,9 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
       JOIN d.discountTargets dt
       WHERE d.isActive=true
       """)
-  Page<DiscountClientResource> getDiscountsWithTarget(Pageable pageble);
+    Page<DiscountClientResource> getDiscountsWithTarget(Pageable pageble);
 
-  @Query("""
+    @Query("""
       SELECT new com.service.discount.resources.DiscountWithTargetResource(
         dt.id,
         d.id,
@@ -71,5 +72,21 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
       JOIN d.discountTargets dt
       WHERE d.isActive=true
       """)
-  Page<DiscountWithTargetResource> getDiscountWithTargets(Pageable pageable);
+    Page<DiscountWithTargetResource> getDiscountWithTargets(Pageable pageable);
+
+    @Query("""
+    SELECT new com.service.discount.resources.DiscountClientResource(
+      d.id,
+      d.discountPercentage,
+      d.discountAmount,
+      d.minOrderValue,
+      CAST(dt.targetType AS string),
+      dt.targetId
+    )
+    FROM Discount d
+    JOIN d.discountTargets dt
+    WHERE d.isActive=true AND dt.targetId = :targetId
+    """)
+    DiscountClientResource getByTargetIWithDiscountsClient(@Param("targetId") UUID targetId);
+
 }

@@ -12,17 +12,20 @@ import com.service.discount.resources.DiscountWithTargetResource;
 import com.service.discount.responses.PaginationResponse;
 
 public interface DiscountInterface {
-  Discount createDiscount(DiscountRequest request);
 
-  Discount updateDiscount(DiscountRequest request);
+    Discount createDiscount(DiscountRequest request);
 
-  Boolean deleteDiscount(UUID id);
+    Discount updateDiscount(DiscountRequest request);
 
-  PaginationResponse<DiscountResource> getAllDiscounts(PaginationRequest request);
+    Boolean deleteDiscount(UUID id);
 
-  List<DiscountClientResource> getAllDiscountsClient();
+    PaginationResponse<DiscountResource> getAllDiscounts(PaginationRequest request);
 
-  PaginationResponse<DiscountClientResource> getDiscountsWithTarget(PaginationRequest request);
+    List<DiscountClientResource> getAllDiscountsClient();
 
-  PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request);
+    PaginationResponse<DiscountClientResource> getDiscountsWithTarget(PaginationRequest request);
+
+    PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request);
+
+    DiscountClientResource getByTargetIdDiscountClientResource(UUID targetId);
 }

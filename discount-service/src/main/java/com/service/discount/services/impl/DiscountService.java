@@ -150,4 +150,9 @@ public class DiscountService implements DiscountInterface {
                 .totalElements(discountWithTargets.getTotalElements())
                 .build();
     }
+
+    @Override
+    public DiscountClientResource getByTargetIdDiscountClientResource(UUID targetId) {
+        return discountRepository.getByTargetIWithDiscountsClient(targetId);
+    }
 }
