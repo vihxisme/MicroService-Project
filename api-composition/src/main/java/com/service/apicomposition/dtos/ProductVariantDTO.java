@@ -14,7 +14,9 @@ import lombok.Setter;
 public class ProductVariantDTO {
 
     private Integer id;
+    private Integer colorId;
     private String colorName;
+    private Integer sizeId;
     private String sizeName;
     private Integer stock;
     private String colorImageUrl;

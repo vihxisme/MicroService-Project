@@ -47,7 +47,9 @@ public interface ProductMapper {
     ProdAllInfoResource toProdAllInfoResource(Product product);
 
     // Map từ ProductVariant sang ProductVariantDTO
+    @Mapping(source = "color.id", target = "colorId")
     @Mapping(source = "color.name", target = "colorName")
+    @Mapping(source = "size.id", target = "sizeId")
     @Mapping(source = "size.name", target = "sizeName")
     ProductVariantDTO toProductVariantDTO(ProductVariant variant);
 
