@@ -18,16 +18,18 @@ import lombok.Setter;
 @Builder
 public class UpdateInfoCustomerRequest {
 
-  @NotNull
-  private UUID authUserId;
+    @NotNull
+    private UUID authUserId;
 
-  @NotBlank
-  private String firstName;
+    @NotBlank
+    private String firstName;
 
-  @NotBlank
-  private String lastName;
+    @NotBlank
+    private String lastName;
 
-  private String gender;
+    private String gender;
 
-  private LocalDate dob;
+    private LocalDate dob;
+
+    private String avatar;
 }

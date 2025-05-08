@@ -10,11 +10,12 @@ import com.service.customer.requests.AddAddressRequest;
 import com.service.customer.requests.UpdateAddrerssRequest;
 
 @Mapper(componentModel = "spring", uses = {
-    CustomerConverter.class }, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    CustomerConverter.class}, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface AddressMapper {
-  @Mapping(target = "customerID", source = "customerID", qualifiedByName = "UUIDtoCustomer")
-  Address toAddress(AddAddressRequest request);
 
-  @Mapping(target = "customerID", source = "customerID", qualifiedByName = "UUIDtoCustomer")
-  void updateAddressFromDto(UpdateAddrerssRequest dto, @MappingTarget Address address);
+    @Mapping(target = "customerID", source = "customerID", qualifiedByName = "UUIDtoCustomer")
+    Address toAddress(AddAddressRequest request);
+
+    @Mapping(target = "customerID", source = "customerID", qualifiedByName = "UUIDtoCustomer")
+    void updateAddressFromDto(UpdateAddrerssRequest dto, @MappingTarget Address address);
 }

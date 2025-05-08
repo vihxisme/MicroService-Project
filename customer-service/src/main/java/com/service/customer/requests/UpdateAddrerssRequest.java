@@ -18,29 +18,36 @@ import lombok.ToString;
 @Builder
 @ToString
 public class UpdateAddrerssRequest {
-  @NotNull
-  private Long id;
 
-  private UUID customerID;
+    @NotNull
+    private Long id;
 
-  @NotBlank
-  private String name;
+    private UUID customerID;
 
-  @NotBlank
-  private String phone;
+    @NotBlank
+    private String name;
 
-  @NotBlank
-  private String street;
+    @NotBlank
+    private String phone;
 
-  @NotBlank
-  private String state;
+    @NotBlank
+    private String address;
 
-  @NotBlank
-  private String city;
+    @NotBlank
+    private Integer ward;
 
-  @NotBlank
-  private String country;
+    @NotBlank
+    private Integer district;
 
-  @Builder.Default
-  private Boolean isDefault = false;
+    @NotBlank
+    private Integer province;
+
+    @NotBlank
+    private String fullAddress;
+
+    @NotBlank
+    private String country;
+
+    @Builder.Default
+    private Boolean isDefault = false;
 }

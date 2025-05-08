@@ -12,9 +12,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.service.customer.entities.Address;
@@ -31,7 +32,7 @@ public class AddressController {
     @Autowired
     private AddressInterface addressInterface;
 
-    @PostMapping("/add")
+    @PostMapping("/create")
     public ResponseEntity<?> addAddress(@RequestBody AddAddressRequest request) {
         Address address = addressInterface.addAddress(request);
 
@@ -39,7 +40,7 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.CREATED).body(success);
     }
 
-    @PutMapping("/update")
+    @PatchMapping("/update")
     public ResponseEntity<?> updateAddress(@RequestBody UpdateAddrerssRequest request) {
         Address address = addressInterface.updateAddress(request);
 
@@ -62,8 +63,8 @@ public class AddressController {
         }
     }
 
-    @GetMapping("/info/{customerId}")
-    public ResponseEntity<?> getAddress(@PathVariable String customerId) {
+    @GetMapping("/info")
+    public ResponseEntity<?> getAddress(@RequestParam String customerId) {
         List<Address> list = addressInterface.getAllAddressByCustomer(UUID.fromString(customerId));
 
         SuccessResponse<List<Address>> success = new SuccessResponse<>("SUCCESS", list);

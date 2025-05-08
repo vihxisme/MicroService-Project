@@ -16,27 +16,35 @@ import lombok.Setter;
 @Setter
 @Builder
 public class AddAddressRequest {
-  @NotNull
-  private UUID customerID;
 
-  @NotBlank
-  private String name;
+    @NotNull
+    private UUID customerID;
 
-  @NotBlank
-  private String phone;
+    @NotBlank
+    private String name;
 
-  @NotBlank
-  private String street;
+    @NotBlank
+    private String phone;
 
-  @NotBlank
-  private String state;
+    @NotBlank
+    private String address;
 
-  @NotBlank
-  private String city;
+    @NotBlank
+    private Integer ward;
 
-  @NotBlank
-  private String country;
+    @NotBlank
+    private Integer district;
 
-  @Builder.Default
-  private Boolean isDefault = false;
+    @NotBlank
+    private Integer province;
+
+    @NotBlank
+    private String fullAddress;
+
+    @NotBlank
+    @Builder.Default
+    private String country = "Việt Nam";
+
+    @Builder.Default
+    private Boolean isDefault = false;
 }

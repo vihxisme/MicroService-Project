@@ -28,38 +28,45 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Address {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id")
-  private Long id;
 
-  @JsonBackReference
-  @ManyToOne
-  @JoinColumn(name = "customer_id")
-  private Customer customerID;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
-  @Column(name = "name", nullable = false)
-  private String name;
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customerID;
 
-  @Column(name = "phone", unique = true, nullable = false, length = 15)
-  private String phone;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-  @Column(name = "street", nullable = false)
-  private String street;
+    @Column(name = "phone", nullable = false, length = 15)
+    private String phone;
 
-  @Column(name = "state", nullable = false)
-  private String state;
+    @Column(name = "address", nullable = false)
+    private String address;
 
-  @Column(name = "city", nullable = false)
-  private String city;
+    @Column(name = "ward", nullable = false)
+    private Integer ward;
 
-  @Column(name = "country", nullable = false)
-  private String country;
+    @Column(name = "district", nullable = false)
+    private Integer district;
 
-  @Column(name = "is_default", columnDefinition = "Boolean default false")
-  private Boolean isDefault;
+    @Column(name = "province", nullable = false)
+    private Integer province;
 
-  @UpdateTimestamp
-  @Column(name = "updated_at")
-  private Timestamp updatedAt;
+    @Column(name = "full_address")
+    private String fullAddress;
+
+    @Column(name = "country", nullable = false)
+    private String country;
+
+    @Column(name = "is_default", columnDefinition = "Boolean default false")
+    private Boolean isDefault;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Timestamp updatedAt;
 }

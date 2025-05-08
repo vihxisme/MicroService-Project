@@ -1,8 +1,7 @@
-package com.service.customer.requests;
+package com.service.customer.dtos;
 
-import java.util.UUID;
+import java.math.BigDecimal;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,9 +13,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class AvatarRequest {
+public class GrowthResult<T> {
 
-    @NotNull
-    private UUID id;
-    private String avatar;
+    T current;
+    T previous;
+    BigDecimal growthPercent;
+    // BigDecimal growthOrderPercent;
 }
