@@ -11,9 +11,10 @@ import com.service.auth.requests.AddInfoCustomerRequest;
 
 @FeignClient(name = "api-composition")
 public interface ApiCustomerClient {
-  @PostMapping("/customer-client/proxy/internal/profile/info/add")
-  ResponseEntity<?> addInfoCustomer(@RequestBody AddInfoCustomerRequest request);
 
-  @GetMapping("/customer-client/proxy/internal/profile/info/{authId}")
-  ResponseEntity<?> getUserIdByAuthId(@PathVariable String authId);
+    @PostMapping("/customer-client/proxy/internal/profile/info/add")
+    ResponseEntity<?> addInfoCustomer(@RequestBody AddInfoCustomerRequest request);
+
+    @GetMapping("/customer-client/proxy/internal/profile/info/{authId}")
+    ResponseEntity<?> getUserIdByAuthId(@PathVariable String authId);
 }

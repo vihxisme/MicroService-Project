@@ -34,110 +34,115 @@ import jakarta.transaction.Transactional;
 @Service
 public class AuthService implements AuthInterface {
 
-  private Logger logger = LoggerFactory.getLogger(AuthService.class);
+    private Logger logger = LoggerFactory.getLogger(AuthService.class);
 
-  @Autowired
-  private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-  @Autowired
-  private ApiCustomerClient apiCustomerClient;
+    @Autowired
+    private ApiCustomerClient apiCustomerClient;
 
-  @Autowired
-  private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-  private User authenticateUser(String identifier, String password) {
-    Optional<User> user = userRepository.findByUsernameOrEmail(identifier, identifier);
-    if (!user.isPresent() || !new BCryptPasswordEncoder().matches(password, user.get().getPassword())) {
-      return null;
-    }
-    return user.get();
-  }
-
-  @Override
-  public Object loginUser(LoginRequest loginRequest) {
-    try {
-      User authenticatedUser = authenticateUser(loginRequest.getIdentifier(), loginRequest.getPassword());
-
-      if (authenticatedUser == null) {
-        throw new BadCredentialsException("Invalid username/email or password");
-      }
-
-      ResponseEntity<?> response = apiCustomerClient.getUserIdByAuthId(authenticatedUser.getId().toString());
-
-      SuccessResponse<?> successResponse = objectMapper.convertValue(response.getBody(),
-          new TypeReference<SuccessResponse<UUID>>() {
-          });
-
-      LoginDTO loginDTO = new LoginDTO(
-          authenticatedUser.getId(),
-          UUID.fromString(successResponse.getData().toString()),
-          authenticatedUser.getUsername(),
-          authenticatedUser.getEmail(),
-          authenticatedUser.getRole().toString());
-
-      String token = jwtTokenProvider.generateToken(
-          loginDTO.getId().toString(),
-          loginDTO.getUsername(),
-          loginDTO.getEmail(),
-          loginDTO.getRole());
-
-      return new LoginResource(token, loginDTO);
-
-    } catch (BadCredentialsException e) {
-      Map<String, String> errors = new HashMap<>();
-      errors.put("message", e.getMessage());
-      ErrorResponse errorResponse = new ErrorResponse(401, "An error occurred during authentication", errors);
-      return errorResponse;
-    }
-  }
-
-  @Override
-  public Object registerUser(RegisterUserRequest registerUserRequest) {
-    String password = registerUserRequest.getPassword();
-    String confirmPassword = registerUserRequest.getConfirmPassword();
-
-    if (!password.equals(confirmPassword)) {
-      throw new IllegalArgumentException("Password and Confirm Password must be the same");
+    private User authenticateUser(String identifier, String password) {
+        Optional<User> user = userRepository.findByUsernameOrEmail(identifier, identifier);
+        if (!user.isPresent() || !new BCryptPasswordEncoder().matches(password, user.get().getPassword())) {
+            return null;
+        }
+        return user.get();
     }
 
-    User user = new User();
-    user.setUsername(registerUserRequest.getUsername());
-    user.setEmail(registerUserRequest.getEmail());
-    user.setPassword(new BCryptPasswordEncoder().encode(registerUserRequest.getPassword()));
+    @Override
+    public Object loginUser(LoginRequest loginRequest) {
+        try {
+            User authenticatedUser = authenticateUser(loginRequest.getIdentifier(), loginRequest.getPassword());
 
-    return userRepository.save(user);
-  }
+            if (authenticatedUser == null) {
+                throw new BadCredentialsException("Invalid username/email or password");
+            }
 
-  @Override
-  @Transactional
-  public Object registerUser(RegisterUserRequestWrapper request) {
-    String password = request.getRegisterUserRequest().getPassword();
-    String confirmPassword = request.getRegisterUserRequest().getConfirmPassword();
+            ResponseEntity<?> response = apiCustomerClient.getUserIdByAuthId(authenticatedUser.getId().toString());
 
-    if (!password.equals(confirmPassword)) {
-      throw new IllegalArgumentException("Password and Confirm Password must be the same");
+            SuccessResponse<?> successResponse = objectMapper.convertValue(response.getBody(),
+                    new TypeReference<SuccessResponse<UUID>>() {
+            });
+
+            LoginDTO loginDTO = new LoginDTO(
+                    authenticatedUser.getId(),
+                    UUID.fromString(successResponse.getData().toString()),
+                    authenticatedUser.getUsername(),
+                    authenticatedUser.getEmail(),
+                    authenticatedUser.getRole().toString());
+
+            String token = jwtTokenProvider.generateToken(
+                    loginDTO.getId().toString(),
+                    loginDTO.getUsername(),
+                    loginDTO.getEmail(),
+                    loginDTO.getRole());
+
+            return new LoginResource(token, loginDTO);
+
+        } catch (BadCredentialsException e) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", e.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(401, "An error occurred during authentication", errors);
+            return errorResponse;
+        }
     }
 
-    User user = new User();
-    user.setUsername(request.getRegisterUserRequest().getUsername());
-    user.setEmail(request.getRegisterUserRequest().getEmail());
-    user.setPassword(new BCryptPasswordEncoder().encode(request.getRegisterUserRequest().getPassword()));
+    @Override
+    public Object registerUser(RegisterUserRequest registerUserRequest) {
 
-    User addUser = userRepository.save(user);
+        logger.info("Password: " + registerUserRequest.getPassword());
+        logger.info("confirmPassword: " + registerUserRequest.getConfirmPassword());
+        String password = registerUserRequest.getPassword();
+        String confirmPassword = registerUserRequest.getConfirmPassword();
+        logger.info("Spass: " + password);
+        logger.info("CSpass: " + confirmPassword);
 
-    AddInfoCustomerRequest addInfoCustomerRequest = new AddInfoCustomerRequest(
-        addUser.getId(),
-        request.getInfoCustomer().getFirstName(),
-        request.getInfoCustomer().getLastName(),
-        addUser.getEmail(),
-        request.getInfoCustomer().getPhone());
+        if (!password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Password and Confirm Password must be the same");
+        }
 
-    apiCustomerClient.addInfoCustomer(addInfoCustomerRequest);
+        User user = new User();
+        user.setUsername(registerUserRequest.getUsername());
+        user.setEmail(registerUserRequest.getEmail());
+        user.setPassword(new BCryptPasswordEncoder().encode(registerUserRequest.getPassword()));
 
-    return addUser;
-  }
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public Object registerUser(RegisterUserRequestWrapper request) {
+        String password = request.getRegisterUserRequest().getPassword();
+        String confirmPassword = request.getRegisterUserRequest().getConfirmPassword();
+
+        if (!password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Password and Confirm Password must be the same");
+        }
+
+        User user = new User();
+        user.setUsername(request.getRegisterUserRequest().getUsername());
+        user.setEmail(request.getRegisterUserRequest().getEmail());
+        user.setPassword(new BCryptPasswordEncoder().encode(request.getRegisterUserRequest().getPassword()));
+
+        User addUser = userRepository.save(user);
+
+        AddInfoCustomerRequest addInfoCustomerRequest = new AddInfoCustomerRequest(
+                addUser.getId(),
+                request.getInfoCustomer().getFirstName(),
+                request.getInfoCustomer().getLastName(),
+                addUser.getEmail(),
+                request.getInfoCustomer().getPhone());
+
+        apiCustomerClient.addInfoCustomer(addInfoCustomerRequest);
+
+        return addUser;
+    }
 
 }
