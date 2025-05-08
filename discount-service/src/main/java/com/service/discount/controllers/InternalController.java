@@ -34,4 +34,9 @@ public class InternalController {
     public ResponseEntity<?> getByTargetIdWithDiscountClientResource(@RequestParam UUID targetId) {
         return ResponseEntity.ok(discountInterface.getByTargetIdDiscountClientResource(targetId));
     }
+
+    @GetMapping("/discount-client/with-target/by")
+    public ResponseEntity<?> getDiscountsWithTarget(@ModelAttribute PaginationRequest request, @RequestParam UUID discountId, @RequestParam String targetType) {
+        return ResponseEntity.ok(discountInterface.getDiscountWithTargets(request, discountId, targetType));
+    }
 }

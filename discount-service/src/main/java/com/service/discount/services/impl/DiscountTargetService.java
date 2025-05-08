@@ -1,6 +1,9 @@
 package com.service.discount.services.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -26,89 +29,136 @@ import jakarta.transaction.Transactional;
 @Service
 public class DiscountTargetService implements DiscountTargetInterface {
 
-  @Autowired
-  private DiscountTargetRepository discountTargetRepository;
+    @Autowired
+    private DiscountTargetRepository discountTargetRepository;
 
-  @Autowired
-  private DiscountTargetMapper discountTargetMapper;
+    @Autowired
+    private DiscountTargetMapper discountTargetMapper;
 
-  @Autowired
-  private ApiClient apiClient;
+    @Autowired
+    private ApiClient apiClient;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-  @Override
-  @Transactional
-  public DiscountTarget createDiscountTarget(TargetRequest request) {
+    @Override
+    @Transactional
+    public DiscountTarget createDiscountTarget(TargetRequest request) {
 
-    Optional<DiscountTarget> existingTarget = discountTargetRepository
-        .findActiveDiscountByTargetId(request.getTargetId());
+        Optional<DiscountTarget> existingTarget = discountTargetRepository
+                .findActiveDiscountByTargetId(request.getTargetId());
 
-    if (existingTarget.isPresent()) {
-      throw new IllegalArgumentException("The Target ID already exists in an active Discount");
+        if (existingTarget.isPresent()) {
+            throw new IllegalArgumentException("The Target ID already exists in an active Discount");
+        }
+
+        DiscountTarget discountTarget = discountTargetMapper.toDiscountTarget(request);
+
+        return discountTargetRepository.save(discountTarget);
     }
 
-    DiscountTarget discountTarget = discountTargetMapper.toDiscountTarget(request);
+    @Override
+    @Transactional
+    public DiscountTarget updateDiscountTarget(TargetRequest request) {
+        DiscountTarget existDiscountTarget = discountTargetRepository.findById(request.getId())
+                .orElseThrow(() -> new RuntimeException("Discount target not found"));
 
-    return discountTargetRepository.save(discountTarget);
-  }
+        Optional<DiscountTarget> existingTarget = discountTargetRepository
+                .findActiveDiscountByTargetId(request.getTargetId());
 
-  @Override
-  @Transactional
-  public DiscountTarget updateDiscountTarget(TargetRequest request) {
-    DiscountTarget existDiscountTarget = discountTargetRepository.findById(request.getId())
-        .orElseThrow(() -> new RuntimeException("Discount target not found"));
+        if (existingTarget.isPresent()) {
+            throw new IllegalArgumentException("The Target ID already exists in an active Discount");
+        }
 
-    Optional<DiscountTarget> existingTarget = discountTargetRepository
-        .findActiveDiscountByTargetId(request.getTargetId());
+        existDiscountTarget = discountTargetMapper.updateDiscountTargetFromRequest(request, existDiscountTarget);
 
-    if (existingTarget.isPresent()) {
-      throw new IllegalArgumentException("The Target ID already exists in an active Discount");
+        return discountTargetRepository.save(existDiscountTarget);
     }
 
-    existDiscountTarget = discountTargetMapper.updateDiscountTargetFromRequest(request, existDiscountTarget);
+    @Override
+    @Transactional
+    public Boolean deleteDiscountTarget(Integer id) {
+        Boolean isDiscountTarget = discountTargetRepository.deleteByIdCustom(id) > 0;
 
-    return discountTargetRepository.save(existDiscountTarget);
-  }
+        if (!isDiscountTarget) {
+            throw new RuntimeException("Discount target not found");
+        }
 
-  @Override
-  @Transactional
-  public Boolean deleteDiscountTarget(Integer id) {
-    Boolean isDiscountTarget = discountTargetRepository.deleteByIdCustom(id) > 0;
-
-    if (!isDiscountTarget) {
-      throw new RuntimeException("Discount target not found");
+        return isDiscountTarget;
     }
 
-    return isDiscountTarget;
-  }
+    @Override
+    public PaginationResponse<DiscountTarget> getAllDiscountTargets(PaginationRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-  @Override
-  public PaginationResponse<DiscountTarget> getAllDiscountTargets(PaginationRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Page<DiscountTarget> discountTargets = discountTargetRepository.findAll(pageable);
 
-    Page<DiscountTarget> discountTargets = discountTargetRepository.findAll(pageable);
+        return PaginationResponse.<DiscountTarget>builder()
+                .content(discountTargets.getContent())
+                .pageNumber(discountTargets.getNumber())
+                .pageSize(discountTargets.getSize())
+                .totalPages(discountTargets.getTotalPages())
+                .totalElements(discountTargets.getTotalElements())
+                .build();
+    }
 
-    return PaginationResponse.<DiscountTarget>builder()
-        .content(discountTargets.getContent())
-        .pageNumber(discountTargets.getNumber())
-        .pageSize(discountTargets.getSize())
-        .totalPages(discountTargets.getTotalPages())
-        .totalElements(discountTargets.getTotalElements())
-        .build();
-  }
+    @Override
+    public PaginationResponse<DiscountWithTargetNameResource> getDiscountWithTargetName(PaginationRequest request) {
+        ResponseEntity<?> response = apiClient.getDiscountTargetWithTargetIdName(request.getPage(), request.getSize());
 
-  @Override
-  public PaginationResponse<DiscountWithTargetNameResource> getDiscountWithTargetName(PaginationRequest request) {
-    ResponseEntity<?> response = apiClient.getDiscountTargetWithTargetIdName(request.getPage(), request.getSize());
-
-    PaginationResponse<DiscountWithTargetNameResource> paginationResponse = objectMapper.convertValue(
-        response.getBody(),
-        new TypeReference<PaginationResponse<DiscountWithTargetNameResource>>() {
+        PaginationResponse<DiscountWithTargetNameResource> paginationResponse = objectMapper.convertValue(
+                response.getBody(),
+                new TypeReference<PaginationResponse<DiscountWithTargetNameResource>>() {
         });
 
-    return paginationResponse;
-  }
+        return paginationResponse;
+    }
+
+    @Override
+    public PaginationResponse<DiscountWithTargetNameResource> getDiscountWithTargetName(UUID discountId, String targetType, PaginationRequest request) {
+        ResponseEntity<?> response = apiClient.getDiscountTargetWithTargetIdName(discountId, targetType, request.getPage(), request.getSize());
+
+        PaginationResponse<DiscountWithTargetNameResource> paginationResponse = objectMapper.convertValue(
+                response.getBody(),
+                new TypeReference<PaginationResponse<DiscountWithTargetNameResource>>() {
+        });
+
+        return paginationResponse;
+    }
+
+    @Override
+    public List<DiscountTarget> createDiscountTarget(List<TargetRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("List of requests cannot be null or empty");
+        }
+
+        List<DiscountTarget> discountTargets = new ArrayList<>();
+
+        for (TargetRequest request : requests) {
+            DiscountTarget discountTarget = discountTargetMapper.toDiscountTarget(request);
+
+            discountTargets.add(discountTarget);
+        }
+
+        return discountTargets;
+    }
+
+    @Override
+    public Boolean deleteDiscountTarget(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException("List of requests cannot be null or empty");
+        }
+
+        List<DiscountTarget> discountTargets = discountTargetRepository.findAllById(ids);
+
+        if (discountTargets.size() != ids.size()) {
+            throw new IllegalArgumentException("OrderItem not found");
+        }
+
+        discountTargetRepository.deleteAll(discountTargets);
+
+        return true;
+
+    }
 
 }

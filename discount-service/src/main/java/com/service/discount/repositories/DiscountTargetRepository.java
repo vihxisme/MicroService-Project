@@ -12,17 +12,33 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.service.discount.entities.DiscountTarget;
-import com.service.discount.resources.DiscountWithTargetResource;
 
 @Repository
 public interface DiscountTargetRepository extends JpaRepository<DiscountTarget, Integer> {
-  @Modifying
-  @Query("DELETE FROM DiscountTarget dt WHERE dt.id = :id")
-  int deleteByIdCustom(@Param("id") Integer id);
 
-  Page<DiscountTarget> findAll(Pageable pageable);
+    @Modifying
+    @Query("DELETE FROM DiscountTarget dt WHERE dt.id = :id")
+    int deleteByIdCustom(@Param("id") Integer id);
 
-  @Query("SELECT d FROM DiscountTarget d WHERE d.targetId = :targetId AND d.discount.isActive = true")
-  Optional<DiscountTarget> findActiveDiscountByTargetId(@Param("targetId") UUID targetId);
+    Page<DiscountTarget> findAll(Pageable pageable);
+
+    @Query("SELECT d FROM DiscountTarget d WHERE d.targetId = :targetId AND d.discount.isActive = true")
+    Optional<DiscountTarget> findActiveDiscountByTargetId(@Param("targetId") UUID targetId);
+
+    @Query("""
+      SELECT COUNT(DISTINCT dt.targetId)
+      FROM DiscountTarget dt
+      JOIN dt.discount d
+      WHERE dt.targetType = 'PRODUCT' AND d.isActive = true
+    """)
+    Long countDiscountedProducts();
+
+    @Query("""
+      SELECT COUNT(DISTINCT dt.targetId)
+      FROM DiscountTarget dt
+      JOIN dt.discount d
+      WHERE dt.targetType = 'CATEGORIE' AND d.isActive = true
+  """)
+    Long countDiscountedCategories();
 
 }

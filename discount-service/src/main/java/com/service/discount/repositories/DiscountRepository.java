@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.service.discount.entities.Discount;
+import com.service.discount.enums.TargetTypeEnum;
 import com.service.discount.resources.DiscountClientResource;
 import com.service.discount.resources.DiscountWithTargetResource;
 
@@ -75,6 +76,24 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
     Page<DiscountWithTargetResource> getDiscountWithTargets(Pageable pageable);
 
     @Query("""
+      SELECT new com.service.discount.resources.DiscountWithTargetResource(
+        dt.id,
+        d.id,
+        d.discountCode,
+        d.discountTitle,
+        d.discountPercentage,
+        d.discountAmount,
+        d.minOrderValue,
+        CAST(dt.targetType AS string),
+        dt.targetId
+      )
+      FROM Discount d
+      JOIN d.discountTargets dt
+      WHERE d.id = :discountId AND dt.targetType = :targetType
+      """)
+    Page<DiscountWithTargetResource> getDiscountWithTargets(Pageable pageable, @feign.Param("discountId") UUID discountId, @feign.Param("targetType") TargetTypeEnum targetType);
+
+    @Query("""
     SELECT new com.service.discount.resources.DiscountClientResource(
       d.id,
       d.discountPercentage,
@@ -88,5 +107,11 @@ public interface DiscountRepository extends JpaRepository<Discount, UUID> {
     WHERE d.isActive=true AND dt.targetId = :targetId
     """)
     DiscountClientResource getByTargetIWithDiscountsClient(@Param("targetId") UUID targetId);
+
+    @Query("SELECT COUNT(d) FROM Discount d")
+    Long countAllDiscounts();
+
+    @Query("SELECT COUNT(d) FROM Discount d WHERE d.isActive = true")
+    Long countActiveDiscounts();
 
 }

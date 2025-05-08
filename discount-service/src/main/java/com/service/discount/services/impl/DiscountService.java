@@ -11,15 +11,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.service.discount.entities.Discount;
+import com.service.discount.enums.TargetTypeEnum;
 import com.service.discount.mappers.DiscountMapper;
 import com.service.discount.repositories.DiscountRepository;
+import com.service.discount.repositories.DiscountTargetRepository;
 import com.service.discount.requests.DiscountRequest;
 import com.service.discount.requests.PaginationRequest;
 import com.service.discount.resources.DiscountClientResource;
 import com.service.discount.resources.DiscountResource;
+import com.service.discount.resources.DiscountStatisticsResource;
 import com.service.discount.resources.DiscountWithTargetResource;
 import com.service.discount.responses.PaginationResponse;
 import com.service.discount.services.interfaces.DiscountInterface;
@@ -32,6 +36,9 @@ public class DiscountService implements DiscountInterface {
 
     @Autowired
     private DiscountRepository discountRepository;
+
+    @Autowired
+    private DiscountTargetRepository discountTargetRepository;
 
     @Autowired
     private DiscountMapper discountMapper;
@@ -48,11 +55,11 @@ public class DiscountService implements DiscountInterface {
             request.setDiscountCode(generateDiscountCode());
         }
 
+        request.setDiscountType(3);
         Discount discount = discountMapper.toDiscount(request);
         Discount savedDiscount = discountRepository.save(discount);
 
-        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
-
+        rabbitTemplate.convertAndSend("cache-update.exchange", "clear-cache", "*");
         return savedDiscount;
     }
 
@@ -66,8 +73,7 @@ public class DiscountService implements DiscountInterface {
 
         Discount savedDiscount = discountRepository.save(existDiscount);
 
-        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
-
+        rabbitTemplate.convertAndSend("cache-update.exchange", "clear-cache", "*");
         return savedDiscount;
     }
 
@@ -79,8 +85,7 @@ public class DiscountService implements DiscountInterface {
 
         discountRepository.delete(existDiscount);
 
-        rabbitTemplate.convertAndSend("cache-update-exchange", "clear-cache", "*");
-
+        rabbitTemplate.convertAndSend("cache-update.exchange", "clear-cache", "*");
         return true;
     }
 
@@ -154,5 +159,33 @@ public class DiscountService implements DiscountInterface {
     @Override
     public DiscountClientResource getByTargetIdDiscountClientResource(UUID targetId) {
         return discountRepository.getByTargetIWithDiscountsClient(targetId);
+    }
+
+    @Override
+    public PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request,
+            UUID discountId, String targetType) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        TargetTypeEnum typeEnums = TargetTypeEnum.valueOf(targetType);
+
+        Page<DiscountWithTargetResource> discountsWithTarget = discountRepository.getDiscountWithTargets(pageable, discountId, typeEnums);
+
+        return PaginationResponse.<DiscountWithTargetResource>builder()
+                .content(discountsWithTarget.getContent())
+                .pageNumber(discountsWithTarget.getNumber())
+                .pageSize(discountsWithTarget.getSize())
+                .totalPages(discountsWithTarget.getTotalPages())
+                .totalElements(discountsWithTarget.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public DiscountStatisticsResource discountStatisticsResource() {
+        return DiscountStatisticsResource.builder()
+                .totalDiscounts(discountRepository.countAllDiscounts())
+                .activeDiscounts(discountRepository.countActiveDiscounts())
+                .discountedProducts(discountTargetRepository.countDiscountedProducts())
+                .discountedCategories(discountTargetRepository.countDiscountedCategories())
+                .build();
     }
 }

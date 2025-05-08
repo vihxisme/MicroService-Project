@@ -8,6 +8,7 @@ import com.service.discount.requests.DiscountRequest;
 import com.service.discount.requests.PaginationRequest;
 import com.service.discount.resources.DiscountClientResource;
 import com.service.discount.resources.DiscountResource;
+import com.service.discount.resources.DiscountStatisticsResource;
 import com.service.discount.resources.DiscountWithTargetResource;
 import com.service.discount.responses.PaginationResponse;
 
@@ -27,5 +28,9 @@ public interface DiscountInterface {
 
     PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request);
 
+    PaginationResponse<DiscountWithTargetResource> getDiscountWithTargets(PaginationRequest request, UUID discountId, String targetType);
+
     DiscountClientResource getByTargetIdDiscountClientResource(UUID targetId);
+
+    DiscountStatisticsResource discountStatisticsResource();
 }

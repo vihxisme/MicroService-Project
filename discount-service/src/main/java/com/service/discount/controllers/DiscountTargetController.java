@@ -1,5 +1,8 @@
 package com.service.discount.controllers;
 
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.service.discount.entities.DiscountTarget;
@@ -21,40 +25,64 @@ import com.service.discount.services.interfaces.DiscountTargetInterface;
 @RestController
 @RequestMapping("/v1/discount-target")
 public class DiscountTargetController {
-  @Autowired
-  private DiscountTargetInterface discountTargetInterface;
 
-  @PostMapping("/create")
-  public ResponseEntity<?> createDiscountTarget(@RequestBody TargetRequest request) {
-    DiscountTarget discountTarget = discountTargetInterface.createDiscountTarget(request);
+    @Autowired
+    private DiscountTargetInterface discountTargetInterface;
 
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTarget));
-  }
+    @PostMapping("/create")
+    public ResponseEntity<?> createDiscountTarget(@RequestBody TargetRequest request) {
+        DiscountTarget discountTarget = discountTargetInterface.createDiscountTarget(request);
 
-  @PatchMapping("/update")
-  public ResponseEntity<?> updateDiscountTarget(@RequestBody TargetRequest request) {
-    DiscountTarget discountTarget = discountTargetInterface.updateDiscountTarget(request);
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTarget));
+    }
 
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTarget));
-  }
+    @PostMapping("/creates")
+    public ResponseEntity<?> createDiscountTarget(@RequestBody List<TargetRequest> requests) {
+        List<DiscountTarget> discountTarget = discountTargetInterface.createDiscountTarget(requests);
 
-  @DeleteMapping("/delete/{id}")
-  public ResponseEntity<?> deleteDiscountTarget(@PathVariable Integer id) {
-    Boolean isDiscountTarget = discountTargetInterface.deleteDiscountTarget(id);
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTarget));
+    }
 
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", isDiscountTarget));
-  }
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateDiscountTarget(@RequestBody TargetRequest request) {
+        DiscountTarget discountTarget = discountTargetInterface.updateDiscountTarget(request);
 
-  @GetMapping("/info/all")
-  public ResponseEntity<?> getAllDiscountTargets(@ModelAttribute PaginationRequest request) {
-    return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTargetInterface.getAllDiscountTargets(request)));
-  }
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTarget));
+    }
 
-  @GetMapping("/info/target-names")
-  public ResponseEntity<?> getDiscountWithTargetName(@ModelAttribute PaginationRequest request) {
-    return ResponseEntity.ok(
-        new SuccessResponse<>(
-            "SUCCESS",
-            discountTargetInterface.getDiscountWithTargetName(request)));
-  }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteDiscountTarget(@PathVariable Integer id) {
+        Boolean isDiscountTarget = discountTargetInterface.deleteDiscountTarget(id);
+
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", isDiscountTarget));
+    }
+
+    @DeleteMapping("/deletes/{id}")
+    public ResponseEntity<?> deleteDiscountTarget(@PathVariable List<Integer> ids) {
+        Boolean isDiscountTarget = discountTargetInterface.deleteDiscountTarget(ids);
+
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", isDiscountTarget));
+    }
+
+    @GetMapping("/info/all")
+    public ResponseEntity<?> getAllDiscountTargets(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(new SuccessResponse<>("SUCCESS", discountTargetInterface.getAllDiscountTargets(request)));
+    }
+
+    @GetMapping("/info/target-names")
+    public ResponseEntity<?> getDiscountWithTargetName(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        discountTargetInterface.getDiscountWithTargetName(request)));
+    }
+
+    @GetMapping("/info/target-names/by")
+    public ResponseEntity<?> getDiscountWithTargetName(@ModelAttribute PaginationRequest request, @RequestParam UUID discountId, @RequestParam String targetType) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        discountTargetInterface.getDiscountWithTargetName(discountId, targetType, request)));
+    }
+
 }
