@@ -61,9 +61,10 @@ public class WebClientConfiguration {
     @Bean
     CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3333")); // Cho phép tất cả các origin
-        corsConfiguration.setAllowedHeaders(List.of("*")); // Cho phép tất cả headers
-        corsConfiguration.setAllowedMethods(List.of("*")); // Cho phép tất cả HTTP methods (GET, POST,...)
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3333", "http://localhost:3000", "http://localhost:4444")); // Cho phép tất cả các origin
+        corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept")); // Cho phép tất cả headers
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); // Cho phép tất cả HTTP methods (GET, POST,...)
+        corsConfiguration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);

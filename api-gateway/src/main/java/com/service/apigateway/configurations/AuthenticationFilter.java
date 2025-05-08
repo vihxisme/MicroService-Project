@@ -45,6 +45,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         "/product/v1/products/new",
         "/product/v1/products/apparel-type",
         "/product/v1/products/detail-info",
+        "/product/v1/products/top-product/by-revenue",
+        "/product/v1/products/top-product/with-discount",
+        "/order/v1/order/submit-order",
+        "/about/v1/banner/list-all",
         "/ws/.*"};
 
     @Value("${app.api-prefix}")
@@ -74,6 +78,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         return identityService.validateToken(token)
                 .flatMap(response -> {
                     if (response.getData().getValid()) {
+                        logger.info("✅ Token is valid: {}", token);
                         return chain.filter(exchange); // Token hợp lệ, tiếp tục request
                     } else {
                         return unauthorizedResponse(exchange.getResponse()); // Token không hợp lệ

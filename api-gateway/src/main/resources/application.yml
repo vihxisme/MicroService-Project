@@ -15,7 +15,7 @@ spring:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=${app.api-prefix}/identity/v1/**
+            - Path=${app.api-prefix}/identity/**
           filters:
             - StripPrefix=1
             # - PreserveHostHeader=true
@@ -25,7 +25,7 @@ spring:
         - id: customer-service
           uri: lb://customer-service
           predicates:
-            - Path=${app.api-prefix}/v1/customer/**
+            - Path=${app.api-prefix}/customer/v1/**
           filters:
             - StripPrefix=1
 
@@ -71,6 +71,13 @@ spring:
           filters:
             - StripPrefix=1
 
+        - id: about-service
+          uri: lb://about-service
+          predicates:
+            - Path=${app.api-prefix}/about/v1/**
+          filters:
+            - StripPrefix=1
+
         # 🔹 Chuyển tiếp WebSocket của product-service
         - id: product-websocket
           uri: lb://product-service
@@ -90,13 +97,25 @@ server:
 eureka:
   client:
     service-url:
-      default-zone: http://localhost:8761/eureka/
+      defaultZone: http://eurekaserver:8761/eureka/
     fetch-registry: true
     register-with-eureka: true
+  instance:
+    prefer-ip-address: true
 
 logging:
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%t]){faint} %clr(%-40.40c{1.}){cyan} %clr(:){faint} %m%n%wEx"
 
   level:
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway:
+    org.springframework.web.cors: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
