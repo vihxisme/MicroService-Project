@@ -1,5 +1,6 @@
 package com.service.payment.requests;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -17,9 +18,18 @@ public class PaymentRequest {
 
     private UUID id;
     private String paymentCode;
+    private String orderCode;
     private UUID orderId;
     private UUID userId;
-    private Integer paymentMethod;
-    private Integer paymentStatus;
-    private String message;
+
+    private BigDecimal totalAmount;
+
+    @Builder.Default
+    private Integer paymentMethod = 3;
+
+    @Builder.Default
+    private Integer paymentStatus = 1;
+
+    @Builder.Default
+    private String message = "Thanh toán đơn hàng";
 }
