@@ -15,6 +15,8 @@ public class InventoryProductResource {
     private final String productCode;
     private final UUID productId;
     private final String productName;
+    private final String categoryName;
+    private final String productImageUrl;
     private final Integer quantity;
     private final Boolean isAllowed;
 }

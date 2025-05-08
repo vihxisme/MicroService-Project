@@ -1,5 +1,6 @@
 package com.service.inventory.services.interfaces;
 
+import java.util.Map;
 import java.util.UUID;
 
 import com.service.inventory.entities.Inventory;
@@ -20,5 +21,4 @@ public interface InventoryInterface {
     PaginationResponse<InventoryResource> getPaginationInventory(PaginationRequest request);
 
     PaginationResponse<InventoryProductResource> getInventoryProduct(PaginationRequest request);
-
 }

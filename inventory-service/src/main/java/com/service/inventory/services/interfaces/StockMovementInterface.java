@@ -1,6 +1,7 @@
 package com.service.inventory.services.interfaces;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.service.inventory.entities.StockMovement;
 import com.service.inventory.requests.PaginationRequest;
@@ -23,4 +24,20 @@ public interface StockMovementInterface {
     PaginationResponse<StockMvmInProdResource> getStockMovementTypeIN_Product(PaginationRequest request);
 
     PaginationResponse<StockMvmOutProdResource> getStockMovementTypeOUT_Product(PaginationRequest request);
+
+    PaginationResponse<StockMovementResource> getPaginationMovementTypeIN(PaginationRequest request, UUID inventoryId);
+
+    PaginationResponse<StockMovementResource> getPaginationMovementTypeOUT(PaginationRequest request, UUID inventoryId);
+
+    PaginationResponse<StockMvmInProdResource> getStockMovementTypeIN_Product(PaginationRequest request, UUID inventoryId);
+
+    PaginationResponse<StockMvmOutProdResource> getStockMovementTypeOUT_Product(PaginationRequest request, UUID inventoryId);
+
+    PaginationResponse<StockMovementResource> getPaginationMvmType(PaginationRequest request, UUID inventoryId);
+
+    PaginationResponse<StockMovementResource> getPaginationMvmType(PaginationRequest request, UUID inventoryId, String type);
+
+    PaginationResponse<StockMvmInProdResource> getStockMvmType_Product(PaginationRequest request, UUID inventoryId);
+
+    PaginationResponse<StockMvmInProdResource> getStockMvmType_Product(PaginationRequest request, UUID inventoryId, String type);
 }

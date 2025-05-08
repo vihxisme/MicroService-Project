@@ -17,8 +17,12 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import com.service.events.dto.UpdateVariantQuantityDTO;
 import com.service.inventory.entities.Inventory;
 import com.service.inventory.entities.InventoryItem;
+import com.service.inventory.enums.MovementEnum;
 import com.service.inventory.repositories.InventoryItemRepository;
 import com.service.inventory.repositories.InventoryRepository;
+import com.service.inventory.requests.StockMovementRequest;
+import com.service.inventory.services.impl.RabbitService;
+import com.service.inventory.wrappers.StockMvmWapper;
 
 @Component
 public class InventoryItemListener {
@@ -32,10 +36,16 @@ public class InventoryItemListener {
     @Autowired
     private InventoryItemRepository inventoryItemRepository;
 
+    @Autowired
+    private RabbitService rabbitService;
+
     private Logger logger = LoggerFactory.getLogger(InventoryItemListener.class);
 
     @Value("${rabbitmq.exchange.product}")
     private String productExchange;
+
+    @Value("${rabbitmq.exchange.inventory}")
+    private String myExchange;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onInventoryItemChanged(InventoryItem item) {
@@ -55,6 +65,18 @@ public class InventoryItemListener {
                             .quantity(item.getItemQuantity())
                             .build()
             );
+
+            List<StockMovementRequest> stockMovementRequests = List.of(
+                    StockMovementRequest.builder()
+                            .inventoryItemId(item.getId())
+                            .movementQuantity(item.getItemQuantity())
+                            .movementStatus(MovementEnum.COMPLETED.name())
+                            .build()
+            );
+
+            StockMvmWapper wrapper = StockMvmWapper.builder().stockMvmRequests(stockMovementRequests).build();
+
+            rabbitService.sendMessage(myExchange, "create-stock-mvm", wrapper);
         }
     }
 
@@ -82,6 +104,18 @@ public class InventoryItemListener {
                 );
             }
         });
+
+        List<StockMovementRequest> stockMovementRequests = items.stream()
+                .map(item -> StockMovementRequest.builder()
+                .inventoryItemId(item.getId())
+                .movementQuantity(item.getItemQuantity())
+                .movementStatus(MovementEnum.COMPLETED.name())
+                .build())
+                .collect(Collectors.toList());
+
+        StockMvmWapper wrapper = StockMvmWapper.builder().stockMvmRequests(stockMovementRequests).build();
+
+        rabbitService.sendMessage(myExchange, "create-stock-mvm", wrapper);
     }
 
     private void updateInventoryQuantityAndNotify(UUID inventoryId) {

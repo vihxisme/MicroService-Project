@@ -47,7 +47,7 @@ public class InventoryItem {
     @JoinColumn(name = "inventory_id", nullable = false)
     private Inventory inventory;
 
-    @Column(name = "product_variant_id", nullable = false)
+    @Column(name = "product_variant_id", nullable = false, unique = true)
     private Integer prodVariantId;
 
     @Column(name = "item_quantity", nullable = false)

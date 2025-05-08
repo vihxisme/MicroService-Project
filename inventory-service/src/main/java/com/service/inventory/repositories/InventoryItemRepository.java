@@ -1,5 +1,6 @@
 package com.service.inventory.repositories;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -28,4 +29,9 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, UU
 
     @Query("SELECT SUM(i.itemQuantity) FROM InventoryItem i WHERE i.inventory.id = :inventoryId")
     Integer sumItemQuantityByInventoryId(@Param("inventoryId") UUID inventoryId);
+
+    InventoryItem findByProdVariantId(Integer prodVariantId);
+
+    @Query("SELECT ii FROM InventoryItem ii WHERE ii.prodVariantId IN :prodVariantIds")
+    List<InventoryItem> findByProdVariantIds(@Param("prodVariantIds") List<Integer> prodVariantIds);
 }

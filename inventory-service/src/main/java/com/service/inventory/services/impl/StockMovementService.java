@@ -1,15 +1,21 @@
 package com.service.inventory.services.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +33,7 @@ import com.service.inventory.resources.StockMvmOutProdResource;
 import com.service.inventory.resources.StockMovementResource;
 import com.service.inventory.responses.PaginationResponse;
 import com.service.inventory.services.interfaces.StockMovementInterface;
+import com.service.inventory.wrappers.StockMvmWapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -46,17 +53,22 @@ public class StockMovementService implements StockMovementInterface {
     @Autowired
     private ApiClient apiClient;
 
+    @Autowired
+    private RabbitService rabbitService;
+
     private Logger logger = LoggerFactory.getLogger(StockMovementService.class);
 
-    // @RabbitListener(bindings = @QueueBinding(
-    //         value = @Queue(name = "create-stockMovement", durable = "true"),
-    //         exchange = @Exchange(name = "cache-create-stockMvm-exchange", type = "direct"),
-    //         key = "create-stockMovement"
-    // ))
-    // private Boolean createStockMvmListener(List<StockMovementRequest> requests) {
-    //     List<StockMovement> isList = createStockMovements(requests);
-    //     return isList != null && !isList.isEmpty();
-    // }
+    @RabbitListener(queues = "create-stock-mvm:queue")
+    public void createStockMvmListener(Message message) {
+
+        Optional<StockMvmWapper> requests = rabbitService.deserializeToObject(message.getBody(), StockMvmWapper.class);
+
+        if (requests.isPresent()) {
+            List<StockMovementRequest> stockMovementRequests = requests.get().getStockMvmRequests();
+            createStockMovements(stockMovementRequests);
+        }
+    }
+
     @Override
     @Transactional
     public List<StockMovement> createStockMovements(List<StockMovementRequest> requests) {
@@ -68,6 +80,10 @@ public class StockMovementService implements StockMovementInterface {
 
         for (StockMovementRequest request : requests) {
             StockMovement stockMovement = stockMovementMapper.toStockMovement(request);
+            if (stockMovement.getStockMovementCode() == null) {
+                stockMovement.setStockMovementCode(generateStockMvmCode());
+            }
+
             if (stockMovement.getOrderId() == null || stockMovement.getOrdersCode() == null) {
                 stockMovement.setOrderId(null);
                 stockMovement.setOrdersCode(null);
@@ -157,6 +173,120 @@ public class StockMovementService implements StockMovementInterface {
         });
 
         return stockMovementOutProductResource;
+    }
+
+    @Override
+    public PaginationResponse<StockMovementResource> getPaginationMovementTypeIN(PaginationRequest request,
+            UUID inventoryId) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        Page<StockMovementResource> stockMovements = stockMovementRepository.findTypeINByInventoryID(pageable, inventoryId);
+
+        return PaginationResponse.<StockMovementResource>builder()
+                .content(stockMovements.getContent())
+                .pageNumber(stockMovements.getNumber())
+                .pageSize(stockMovements.getSize())
+                .totalPages(stockMovements.getTotalPages())
+                .totalElements(stockMovements.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PaginationResponse<StockMovementResource> getPaginationMovementTypeOUT(PaginationRequest request,
+            UUID inventoryId) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        Page<StockMovementResource> stockMovements = stockMovementRepository.findTypeOUTByInventoryId(pageable, inventoryId);
+
+        return PaginationResponse.<StockMovementResource>builder()
+                .content(stockMovements.getContent())
+                .pageNumber(stockMovements.getNumber())
+                .pageSize(stockMovements.getSize())
+                .totalPages(stockMovements.getTotalPages())
+                .totalElements(stockMovements.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PaginationResponse<StockMvmInProdResource> getStockMovementTypeIN_Product(PaginationRequest request,
+            UUID inventoryId) {
+        ResponseEntity<?> response = apiClient.getStockMovementTypeINbyInventoryId_Product(inventoryId, request.getPage(), request.getSize());
+
+        PaginationResponse<StockMvmInProdResource> stockMovementInProductResource = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<StockMvmInProdResource>>() {
+        });
+
+        return stockMovementInProductResource;
+    }
+
+    @Override
+    public PaginationResponse<StockMvmOutProdResource> getStockMovementTypeOUT_Product(
+            PaginationRequest request, UUID inventoryId) {
+        ResponseEntity<?> response = apiClient.getStockMovementTypeOUTbyInventoryId_Product(inventoryId, request.getPage(), request.getSize());
+
+        PaginationResponse<StockMvmOutProdResource> stockMovementOutProductResource = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<StockMvmOutProdResource>>() {
+        });
+
+        return stockMovementOutProductResource;
+    }
+
+    @Override
+    public PaginationResponse<StockMovementResource> getPaginationMvmType(PaginationRequest request, UUID inventoryId) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        Page<StockMovementResource> stockMovements = stockMovementRepository.findByInventoryID(pageable, inventoryId);
+
+        return PaginationResponse.<StockMovementResource>builder()
+                .content(stockMovements.getContent())
+                .pageNumber(stockMovements.getNumber())
+                .pageSize(stockMovements.getSize())
+                .totalPages(stockMovements.getTotalPages())
+                .totalElements(stockMovements.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PaginationResponse<StockMovementResource> getPaginationMvmType(PaginationRequest request, UUID inventoryId,
+            String type) {
+
+        MovementEnum movementType = MovementEnum.valueOf(type);
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        Page<StockMovementResource> stockMovements = stockMovementRepository.findTypeByInventoryID(pageable, inventoryId, movementType);
+
+        return PaginationResponse.<StockMovementResource>builder()
+                .content(stockMovements.getContent())
+                .pageNumber(stockMovements.getNumber())
+                .pageSize(stockMovements.getSize())
+                .totalPages(stockMovements.getTotalPages())
+                .totalElements(stockMovements.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PaginationResponse<StockMvmInProdResource> getStockMvmType_Product(PaginationRequest request,
+            UUID inventoryId) {
+        ResponseEntity<?> response = apiClient.getStockMovementTypebyInventoryId_Product(inventoryId, request.getPage(), request.getSize());
+
+        PaginationResponse<StockMvmInProdResource> stockMovementInProductResource = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<StockMvmInProdResource>>() {
+        });
+
+        return stockMovementInProductResource;
+    }
+
+    @Override
+    public PaginationResponse<StockMvmInProdResource> getStockMvmType_Product(PaginationRequest request,
+            UUID inventoryId, String type) {
+        ResponseEntity<?> response = apiClient.getStockMovementTypebyInventoryId_Product(inventoryId, request.getPage(), request.getSize(), type);
+
+        PaginationResponse<StockMvmInProdResource> stockMovementInProductResource = objectMapper.convertValue(response.getBody(),
+                new TypeReference<PaginationResponse<StockMvmInProdResource>>() {
+        });
+
+        return stockMovementInProductResource;
     }
 
 }

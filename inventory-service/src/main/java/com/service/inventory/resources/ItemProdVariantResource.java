@@ -17,6 +17,6 @@ public class ItemProdVariantResource {
     private final String colorName;
     private final int sizeId;
     private final String sizeName;
-    private final int productVariantId;
+    private final int prodVariantId;
     private final int itemQuantity;
 }
