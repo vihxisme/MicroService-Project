@@ -52,12 +52,20 @@ public class ProductController {
                         productInterface.deleteProduct(UUID.fromString(id))));
     }
 
-    @GetMapping("/info/all")
-    public ResponseEntity<?> getAllProduct(@ModelAttribute PaginationRequest request) {
+    @GetMapping("/info/list")
+    public ResponseEntity<?> getAllProducts() {
         return ResponseEntity.ok(
                 new SuccessResponse<>(
                         "SUCCESS",
-                        productInterface.getAllProduct(request)));
+                        productInterface.getAllProducts()));
+    }
+
+    @GetMapping("/info/all")
+    public ResponseEntity<?> getProductsByPagination(@ModelAttribute PaginationRequest request) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getProductsByPagination(request)));
     }
 
     // lấy ra danh sách sản phẩm kèm khuyến mãi (nếu có)
@@ -108,11 +116,58 @@ public class ProductController {
     }
 
     @GetMapping("/detail-info")
-    public ResponseEntity<?> getProdWithDiscountById(@RequestParam UUID id) {
+    public ResponseEntity<?> getProductDetail(@RequestParam UUID id) {
         return ResponseEntity.ok(
                 new SuccessResponse<>(
                         "SUCCESS",
                         productInterface.getProdWithDiscountAllInfoById(id))
+        );
+    }
+
+    @GetMapping("/by")
+    public ResponseEntity<?> getProductById(@RequestParam UUID id) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getProductAllInfoById(id))
+        );
+    }
+
+    @GetMapping("/count/product")
+    public ResponseEntity<?> countProduct() {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.countProduct())
+        );
+    }
+
+    @GetMapping("/top-product/by-revenue")
+    public ResponseEntity<?> getTopProduct(@RequestParam Integer limit) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getTopProductResource(limit)
+                )
+        );
+    }
+
+    @GetMapping("/top-product/with-discount")
+    public ResponseEntity<?> getTopProductWithDiscount(@RequestParam Integer limit) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getTopProductWithDiscount(limit)
+                )
+        );
+    }
+
+    @GetMapping("/top-product/by-rangetype")
+    public ResponseEntity<?> getTopProduct(@RequestParam Integer limit, @RequestParam String rangeType) {
+        return ResponseEntity.ok(
+                new SuccessResponse<>(
+                        "SUCCESS",
+                        productInterface.getTopProductResource(rangeType, limit))
         );
     }
 }

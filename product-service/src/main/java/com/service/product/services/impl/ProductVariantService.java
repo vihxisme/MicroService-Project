@@ -2,6 +2,7 @@ package com.service.product.services.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ import com.service.product.repositories.ProductVariantRepository;
 import com.service.product.requests.ProductVariantRequest;
 import com.service.product.requests.VariantRequest;
 import com.service.product.resources.ColorResource;
+import com.service.product.resources.ProdVariantColorSizeResource;
 import com.service.product.resources.ProdVariantResource;
 import com.service.product.resources.ProductVariantResource;
 import com.service.product.resources.SizeResource;
@@ -138,6 +140,19 @@ public class ProductVariantService implements ProductVariantInterface {
                 productVariant.getSize().getName()))
                 .collect(Collectors.toList());
 
+    }
+
+    @Override
+    public Map<Integer, ProdVariantColorSizeResource> getProdVariantColorSizeById(List<Integer> variantIds) {
+        return productVariantRepository.findAllById(variantIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        ProductVariant::getId,
+                        variant -> ProdVariantColorSizeResource.builder()
+                                .colorName(variant.getColor().getName())
+                                .sizeName(variant.getSize().getName())
+                                .imageVariant(variant.getColorImageUrl())
+                                .build()));
     }
 
 }

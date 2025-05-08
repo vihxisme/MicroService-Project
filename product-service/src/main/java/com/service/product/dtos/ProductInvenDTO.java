@@ -11,9 +11,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class ProductDetailDTO {
+public class ProductInvenDTO {
 
-    private Integer id;
-    private String attributeName;
-    private String attributeValue;
+    private String name;
+    private String categoryName;
+    private String productImageUrl;
 }

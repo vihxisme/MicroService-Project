@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import com.service.product.entities.Categorie;
 import com.service.product.entities.Product;
 import com.service.product.resources.ProdAndStatusResource;
+import com.service.product.resources.ProdSendEmailResource;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
@@ -60,4 +61,26 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         SELECT p FROM Product p WHERE p.id = :id AND p.status != 'INACTIVE' ORDER BY p.createdAt DESC
         """)
     Product findByIdWithProductAllInfo(@Param("id") UUID id);
+
+    @Query("""
+        SELECT COUNT(p)
+        FROM Product p
+        """)
+    Long countProduct();
+
+    @Query("""
+        SELECT new com.service.product.resources.ProdSendEmailResource(
+            p.id,
+            pv.id,
+            p.name,
+            p.price,
+            p.productImageUrl,
+            pv.color.name,
+            pv.size.name
+        )
+        FROM Product p
+        JOIN p.productVariants pv
+        WHERE p.id IN :productId AND pv.id IN :variantId
+        """)
+    List<ProdSendEmailResource> findByProductIdAndVariantId(@Param("productId") List<UUID> productId, @Param("variantId") List<Integer> variantId);
 }

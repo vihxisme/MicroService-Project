@@ -13,5 +13,6 @@ import lombok.Setter;
 @Builder
 public class ProductImageDTO {
 
+    private Integer id;
     private String imageUrl;
 }

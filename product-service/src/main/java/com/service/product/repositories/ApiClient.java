@@ -24,4 +24,14 @@ public interface ApiClient {
 
     @GetMapping("/product-client/detail-info")
     ResponseEntity<?> getProdWithDiscountAllInfoById(@RequestParam UUID id);
+
+    @GetMapping("/product-client/top-product/by-revenue")
+    ResponseEntity<?> getTopProduct(@RequestParam Integer limit);
+
+    @GetMapping("/product-client/top-product/with-discount")
+    ResponseEntity<?> getTopProductWithDiscount(@RequestParam Integer limit);
+
+    @GetMapping("/product-client/top-product/by-rangetype")
+    ResponseEntity<?> getTopProduct(@RequestParam Integer limit, @RequestParam String rangeType);
+
 }

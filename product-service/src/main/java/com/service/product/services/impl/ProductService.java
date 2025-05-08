@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.events.dto.InventoryEvent;
 import com.service.events.dto.UpdateProductStatusDTO;
 import com.service.events.dto.InventoryDTO;
+import com.service.product.dtos.ProductInvenDTO;
 import com.service.product.entities.Categorie;
 import com.service.product.entities.Product;
 import com.service.product.enums.StatusEnum;
@@ -33,12 +34,16 @@ import com.service.product.repositories.ApiClient;
 import com.service.product.repositories.CategorieRepository;
 import com.service.product.repositories.ProductRepository;
 import com.service.product.requests.PaginationRequest;
+import com.service.product.requests.ProdSendEmailRequest;
 import com.service.product.requests.ProductDetailRequest;
 import com.service.product.requests.ProductImageRequest;
 import com.service.product.requests.ProductRequest;
+import com.service.product.requests.ProductVariantRequest;
 import com.service.product.requests.VariantRequest;
 import com.service.product.resources.ProdAllInfoResource;
 import com.service.product.resources.ProdAndStatusResource;
+import com.service.product.resources.ProdIdNameResource;
+import com.service.product.resources.ProdSendEmailResource;
 import com.service.product.resources.ProdWithDiscountAllInfoResource;
 import com.service.product.resources.ProductResource;
 import com.service.product.resources.ProductVariantResource;
@@ -48,6 +53,7 @@ import com.service.product.services.interfaces.ProductInterface;
 import com.service.product.wrapper.ProdDetailsWrapper;
 import com.service.product.wrapper.ProdImageWrapper;
 import com.service.product.wrapper.ProductWrapper;
+import com.service.product.resources.TopProductResource;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -210,21 +216,37 @@ public class ProductService implements ProductInterface {
     }
 
     /*
-     * lấy ra danh sách tất cả sản phẩm
+     * lấy ra danh sách sản phẩm theo từng trang
      */
     @Override
-    public PaginationResponse<Product> getAllProduct(PaginationRequest request) {
+    public PaginationResponse<ProductResource> getProductsByPagination(PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
 
         Page<Product> prosducts = productRepository.findAll(pageable);
 
-        return PaginationResponse.<Product>builder()
-                .content(prosducts.getContent())
-                .pageNumber(prosducts.getNumber())
-                .pageSize(prosducts.getSize())
-                .totalPages(prosducts.getTotalPages())
-                .totalElements(prosducts.getTotalElements())
+        Page<ProductResource> productResource = prosducts.map(productMapper::toProductResource);
+
+        return PaginationResponse.<ProductResource>builder()
+                .content(productResource.getContent())
+                .pageNumber(productResource.getNumber())
+                .pageSize(productResource.getSize())
+                .totalPages(productResource.getTotalPages())
+                .totalElements(productResource.getTotalElements())
                 .build();
+    }
+
+    /*
+     * lấy ra toàn bộ sản phẩm
+     */
+    @Override
+    public List<ProductResource> getAllProducts() {
+        List<Product> products = productRepository.findAll(Sort.by("createdAt").descending());
+
+        List<ProductResource> productResources = products.stream()
+                .map(productMapper::toProductResource)
+                .collect(Collectors.toList());
+
+        return productResources;
     }
 
     /*
@@ -430,4 +452,99 @@ public class ProductService implements ProductInterface {
         return prodWithDiscountAllInfoResource;
     }
 
+    @Override
+    public Map<UUID, ProdIdNameResource> getProdIdNameById(List<UUID> productIds) {
+        return productRepository.findAllById(productIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Product::getId,
+                        product -> ProdIdNameResource.builder()
+                                .productCode(product.getProductCode())
+                                .productName(product.getName())
+                                .build()));
+    }
+
+    @Override
+    public Product getProductById(UUID id) {
+        Product product = productRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        return product;
+    }
+
+    @Override
+    public Map<UUID, ProductInvenDTO> getProductInven(List<UUID> productIds) {
+        return productRepository.findAllById(productIds)
+                .stream()
+                .collect(Collectors.toMap(Product::getId, product
+                        -> ProductInvenDTO.builder()
+                        .name(product.getName())
+                        .categoryName(product.getCategorie().getName())
+                        .productImageUrl(product.getProductImageUrl())
+                        .build()));
+    }
+
+    @Override
+    public Long countProduct() {
+        return productRepository.countProduct();
+    }
+
+    @Override
+    public Map<UUID, ProductResource> getProductByIds(List<UUID> productIds) {
+        List<Product> products = productRepository.findAllById(productIds);
+
+        List<ProductResource> productResources = products.stream()
+                .map(productMapper::toProductResource)
+                .collect(Collectors.toList());
+
+        Map<UUID, ProductResource> result = productResources.stream()
+                .collect(Collectors.toMap(ProductResource::getId, item -> item));
+
+        return result;
+    }
+
+    @Override
+    public List<ProductWithDiscountResource> getTopProductWithDiscount(Integer limit) {
+        ResponseEntity<?> response = apiClient.getTopProductWithDiscount(limit);
+
+        List<ProductWithDiscountResource> productList = objectMapper.convertValue(response.getBody(),
+                new TypeReference<List<ProductWithDiscountResource>>() {
+        });
+
+        return productList;
+    }
+
+    @Override
+    public List<TopProductResource> getTopProductResource(Integer limit) {
+        ResponseEntity<?> response = apiClient.getTopProduct(limit);
+
+        List<TopProductResource> topProductResource = objectMapper.convertValue(response.getBody(),
+                new TypeReference<List<TopProductResource>>() {
+        });
+
+        return topProductResource;
+    }
+
+    @Override
+    public List<TopProductResource> getTopProductResource(String rangeType, Integer limit) {
+        ResponseEntity<?> response = apiClient.getTopProduct(limit, rangeType);
+
+        List<TopProductResource> topProductResource = objectMapper.convertValue(response.getBody(),
+                new TypeReference<List<TopProductResource>>() {
+        });
+
+        return topProductResource;
+    }
+
+    @Override
+    public List<ProdSendEmailResource> getProdSendEmail(List<ProdSendEmailRequest> requests) {
+        List<UUID> productId = requests.stream()
+                .map(ProdSendEmailRequest::getProductId)
+                .collect(Collectors.toList());
+
+        List<Integer> variantId = requests.stream()
+                .map(ProdSendEmailRequest::getVariantId)
+                .collect(Collectors.toList());
+
+        return productRepository.findByProductIdAndVariantId(productId, variantId);
+    }
 }

@@ -39,6 +39,7 @@ public class Size {
     private String name;
 
     @JsonManagedReference
+    // @JsonIgnore
     @OneToMany(mappedBy = "size", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<ProductVariant> productVariants;
 }

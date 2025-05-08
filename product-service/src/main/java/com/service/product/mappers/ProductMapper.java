@@ -36,6 +36,7 @@ public interface ProductMapper {
 
     @Mapping(target = "categorieId", source = "categorie", qualifiedByName = "categorieToUUID")
     @Mapping(target = "status", source = "status", qualifiedByName = "toStringFromStatusEnum")
+    @Mapping(target = "categoryName", source = "categorie.name")
     ProductResource toProductResource(Product product);
 
     // Map từ Product sang ProductDTO
@@ -54,10 +55,12 @@ public interface ProductMapper {
     ProductVariantDTO toProductVariantDTO(ProductVariant variant);
 
     // Map từ ProductImage sang ProductImageDTO
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "imageUrl", target = "imageUrl")
     ProductImageDTO toProductImageDTO(ProductImage image);
 
     // Map từ ProductDetail sang ProductDetailDTO
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "attributeName", target = "attributeName")
     @Mapping(source = "attributeValue", target = "attributeValue")
     ProductDetailDTO toProductDetailDTO(ProductDetail detail);

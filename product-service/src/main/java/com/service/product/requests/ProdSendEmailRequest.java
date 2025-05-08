@@ -1,4 +1,6 @@
-package com.service.product.dtos;
+package com.service.product.requests;
+
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +13,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class ProductDetailDTO {
+public class ProdSendEmailRequest {
 
-    private Integer id;
-    private String attributeName;
-    private String attributeValue;
+    private UUID productId;
+    private Integer variantId;
 }

@@ -7,11 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.service.product.requests.PaginationRequest;
+import com.service.product.requests.ProdSendEmailRequest;
+import com.service.product.requests.ProductVariantRequest;
 import com.service.product.services.interfaces.CategorieInterface;
 import com.service.product.services.interfaces.ProductInterface;
 import com.service.product.services.interfaces.ProductVariantInterface;
@@ -73,5 +77,30 @@ public class InternalController {
     @GetMapping("/products/detail-info")
     public ResponseEntity<?> getProdAllInfoById(@RequestParam UUID id) {
         return ResponseEntity.ok(productInterface.getProductAllInfoById(id));
+    }
+
+    @GetMapping("/products/id-name/by")
+    public ResponseEntity<?> getProdIdNameByProductId(@RequestParam List<UUID> productIds) {
+        return ResponseEntity.ok(productInterface.getProdIdNameById(productIds));
+    }
+
+    @GetMapping("/product-variant/color-size/by")
+    public ResponseEntity<?> getProdVariantColorSizeByVariantId(@RequestParam List<Integer> variantIds) {
+        return ResponseEntity.ok(productVariantInterface.getProdVariantColorSizeById(variantIds));
+    }
+
+    @GetMapping("/products/inven")
+    public ResponseEntity<?> getProductInven(@RequestParam List<UUID> productIds) {
+        return ResponseEntity.ok(productInterface.getProductInven(productIds));
+    }
+
+    @GetMapping("/products/by")
+    public ResponseEntity<?> getProductByIds(@RequestParam List<UUID> productIds) {
+        return ResponseEntity.ok(productInterface.getProductByIds(productIds));
+    }
+
+    @PostMapping("/prod-send-email")
+    public ResponseEntity<?> getProdSendEmail(@RequestBody List<ProdSendEmailRequest> requests) {
+        return ResponseEntity.ok(productInterface.getProdSendEmail(requests));
     }
 }
