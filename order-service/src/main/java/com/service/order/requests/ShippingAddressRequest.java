@@ -18,10 +18,14 @@ public class ShippingAddressRequest {
     private Integer id;
     private UUID orderId;
     private String name;
+    private String email;
     private String phone;
-    private String street;
-    private String ward;
-    private String district;
-    private String state;
-    private String country;
+    private String address;
+    private Integer ward;
+    private Integer district;
+    private Integer province;
+    private String fullAddress;
+
+    @Builder.Default
+    private String country = "Việt Nam";
 }

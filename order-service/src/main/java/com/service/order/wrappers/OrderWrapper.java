@@ -22,4 +22,5 @@ public class OrderWrapper {
     private OrderRequest orderRequest;
     private List<OrderItemRequest> orderItemRequests;
     private ShippingAddressRequest shippingAddressRequest;
+    private Integer paymentMethod;
 }

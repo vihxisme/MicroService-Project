@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.service.order.dtos.OrderDTO;
 import com.service.order.entities.Order;
 import com.service.order.requests.OrderRequest;
 
@@ -14,6 +15,10 @@ public interface OrderMapper {
     @Mapping(target = "totalAmount", source = "totalAmount", defaultValue = "0")
     Order toOrder(OrderRequest request);
 
-    @Mapping(target = "totalAmount", source = "totalAmount", defaultValue = "0")
+    @Mapping(target = "totalAmount", source = "totalAmount")
     void updateOrderFromRequest(OrderRequest request, @MappingTarget Order order);
+
+    OrderDTO toOrderDTO(Order order);
+
+    Order toOrderFromDTO(OrderDTO dto);
 }

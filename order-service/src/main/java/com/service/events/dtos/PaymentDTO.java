@@ -1,4 +1,4 @@
-package com.service.order.requests;
+package com.service.events.dtos;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -14,14 +14,23 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class OrderRequest {
+public class PaymentDTO {
 
     private UUID id;
+    private String paymentCode;
     private String orderCode;
+    private UUID orderId;
     private UUID userId;
+
     private BigDecimal totalAmount;
-    private BigDecimal shippingFee;
+    ;
 
     @Builder.Default
-    private Integer status = 1;
+    private Integer paymentMethod = 3;
+
+    @Builder.Default
+    private Integer paymentStatus = 1;
+
+    @Builder.Default
+    private String message = "Thanh toán đơn hàng";
 }

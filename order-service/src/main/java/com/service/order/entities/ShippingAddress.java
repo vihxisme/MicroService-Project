@@ -41,20 +41,26 @@ public class ShippingAddress {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "email", nullable = false)
+    private String email;
+
     @Column(name = "phone", nullable = false)
     private String phone;
 
-    @Column(name = "street", nullable = false)
-    private String street;
+    @Column(name = "address", nullable = false)
+    private String address;
 
     @Column(name = "ward", nullable = false)
-    private String ward;
+    private Integer ward;
 
     @Column(name = "district", nullable = false)
-    private String district;
+    private Integer district;
 
-    @Column(name = "state", nullable = false)
-    private String state;
+    @Column(name = "province", nullable = false)
+    private Integer province;
+
+    @Column(name = "full_address")
+    private String fullAddress;
 
     @Column(name = "country", nullable = false)
     private String country;

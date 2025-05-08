@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.TransactionException;
+import org.springframework.amqp.AmqpException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.service.order.responses.ErrorResponse;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -121,4 +123,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(500, "Internal Server Error", errors));
     }
+
+    // Xử lý lỗi AMQP (RabbitMQ)
+    @ExceptionHandler(AmqpException.class)
+    public ResponseEntity<ErrorResponse> handleAmqpException(AmqpException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", "AMQP error: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ErrorResponse(503, "Service Unavailable", errors));
+    }
+
+    // Xử lý lỗi khi xử lý JSON (Jackson)
+    @ExceptionHandler(JsonProcessingException.class)
+    public ResponseEntity<ErrorResponse> handleJsonProcessingException(JsonProcessingException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", "JSON processing error: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(400, "Bad Request", errors));
+    }
+
 }

@@ -1,6 +1,5 @@
 package com.service.order.requests;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -14,14 +13,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class OrderRequest {
+public class ProdSendEmailRequest {
 
-    private UUID id;
-    private String orderCode;
-    private UUID userId;
-    private BigDecimal totalAmount;
-    private BigDecimal shippingFee;
-
-    @Builder.Default
-    private Integer status = 1;
+    private UUID productId;
+    private Integer variantId;
 }
