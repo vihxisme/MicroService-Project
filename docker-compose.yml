@@ -1,0 +1,255 @@
+# version: "3.9"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: usern@me
+      RABBITMQ_DEFAULT_PASS: p@ssw0rd
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "p@ssw0rd"]
+    volumes:
+      - redis-data:/data
+
+  monitoradmin:
+    build:
+      context: ./monitor-admin
+      dockerfile: Dockerfile
+    image: monitor-admin:1.0
+    ports:
+      - "9090:9090"
+    env_file:
+      - local.env
+
+  eurekaserver:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    image: eureka-server:1.0
+    ports:
+      - "8761:8761"
+    # restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/eureka/apps"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  apigateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: api-gateway:1.0
+    ports:
+      - "8888:8888"
+    networks:
+      - microservices-network
+      - default
+    env_file:
+      - local.env
+    depends_on:
+      eurekaserver:
+        condition: service_healthy
+
+  apicomposition:
+    build:
+      context: ./api-composition
+      dockerfile: Dockerfile
+    image: api-composition:1.0
+    ports:
+      - "8386:8386"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  authservice:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    image: auth-service:1.0
+    ports:
+      - "8001:8001"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  customerservice:
+    build:
+      context: ./customer-service
+      dockerfile: Dockerfile
+    image: customer-service:1.0
+    ports:
+      - "8222:8222"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  productservice:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    image: product-service:1.0
+    ports:
+      - "8333:8333"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  discountservice:
+    build:
+      context: ./discount-service
+      dockerfile: Dockerfile
+    image: discount-service:1.0
+    ports:
+      - "8444:8444"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  inventoryservice:
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    image: inventory-service:1.0
+    ports:
+      - "8555:8555"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  cartservice:
+    build:
+      context: ./cart-service
+      dockerfile: Dockerfile
+    image: cart-service:1.0
+    ports:
+      - "8666:8666"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  orderservice:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    image: order-service:1.0
+    ports:
+      - "8777:8777"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  paymentservice:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    image: payment-service:1.0
+    ports:
+      - "8999:8999"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  aboutservice:
+    build:
+      context: ./about-service
+      dockerfile: Dockerfile
+    image: about-service:1.0
+    ports:
+      - "9999:9999"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+  notificationservice:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    image: notification-service:1.0
+    ports:
+      - "8688:8688"
+    env_file:
+      - local.env
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      eurekaserver:
+        condition: service_healthy
+
+volumes:
+  rabbitmq-data:
+  redis-data:
+
+networks:
+  microservices-network:
+    external: true
