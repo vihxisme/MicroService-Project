@@ -64,6 +64,20 @@ public class DiscountClientService {
                 });
     }
 
+    private Mono<PaginationResponse<DiscountWithTargetResource>> fetchDiscountListMono(String path, int page, int size, UUID discountId, String targetType) {
+        return discountClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .queryParam("discountId", discountId)
+                .queryParam("targetType", targetType)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<PaginationResponse<DiscountWithTargetResource>>() {
+                });
+    }
+
     // Request lấy tên sản phẩm từ targetId
     private Mono<Map<UUID, String>> productNamesMono(List<DiscountWithTargetResource> discountList, String path) {
         return discountList.isEmpty() ? Mono.just(Collections.emptyMap())
@@ -154,6 +168,27 @@ public class DiscountClientService {
                 })
                 // Nếu không có dữ liệu trên Redis thì sẽ gọi API để tổng hợp dữ liệu và đẩy lên Redis
                 .switchIfEmpty(fetchDiscountTargetWithProductClient(fetchDiscountListMono("/internal/discount-client/with-target", request.getPage(), request.getSize()))
+                        .doOnNext(data -> logger.info("Data from API: {}", data))
+                        .flatMap(data -> reactiveRedisTemplate.opsForValue()
+                        .set(cacheKey, data, Duration.ofSeconds(DURATION_TTL))
+                        .thenReturn(data)));
+    }
+
+    public Mono<PaginationResponse<DiscountWithTargetNameResource>> getDiscountTargetWithProductClient(PaginationRequest request, UUID discountId, String targetType) {
+        String cacheKey = String.format("discount:target:%s:%s:%d_%d", discountId, targetType, request.getPage(), request.getSize());
+        final long DURATION_TTL = 3600;
+
+        logger.error("cacheKey: " + cacheKey);
+        // Lấy dữ liệu từ Redis
+        return reactiveRedisTemplate.opsForValue().get(cacheKey)
+                .doOnError(error -> logger.error("Error fetching from Redis: ", error))
+                .map(json -> {
+                    logger.info("JSON from Redis: {}", json);
+                    return objectMapper.convertValue(json, new TypeReference<PaginationResponse<DiscountWithTargetNameResource>>() {
+                    });
+                })
+                // Nếu không có dữ liệu trên Redis thì sẽ gọi API để tổng hợp dữ liệu và đẩy lên Redis
+                .switchIfEmpty(fetchDiscountTargetWithProductClient(fetchDiscountListMono("/internal/discount-client/with-target/by", request.getPage(), request.getSize(), discountId, targetType))
                         .doOnNext(data -> logger.info("Data from API: {}", data))
                         .flatMap(data -> reactiveRedisTemplate.opsForValue()
                         .set(cacheKey, data, Duration.ofSeconds(DURATION_TTL))

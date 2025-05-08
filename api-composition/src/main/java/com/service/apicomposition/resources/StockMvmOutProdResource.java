@@ -16,65 +16,65 @@ public class StockMvmOutProdResource implements HasProdVariant {
     @JsonProperty("id")
     private final UUID id;
 
-    @JsonProperty("order_id")
+    @JsonProperty("orderId")
     private final UUID orderId;
 
-    @JsonProperty("orders_code")
+    @JsonProperty("ordersCode")
     private final String ordersCode;
 
-    @JsonProperty("product_id")
+    @JsonProperty("productId")
     private final UUID productId;
 
-    @JsonProperty("product_code")
+    @JsonProperty("productCode")
     private final String productCode;
 
-    @JsonProperty("product_name")
+    @JsonProperty("productName")
     private final String productName;
 
-    @JsonProperty("prod_variant_id")
+    @JsonProperty("prodVariantId")
     private final int prodVariantId;
 
-    @JsonProperty("color_id")
+    @JsonProperty("colorId")
     private final int colorId;
 
-    @JsonProperty("color_name")
+    @JsonProperty("colorName")
     private final String colorName;
 
-    @JsonProperty("size_id")
+    @JsonProperty("sizeId")
     private final int sizeId;
 
-    @JsonProperty("size_name")
+    @JsonProperty("sizeName")
     private final String sizeName;
 
-    @JsonProperty("stock_movement_code")
+    @JsonProperty("stockMovementCode")
     private final String stockMovementCode;
 
-    @JsonProperty("movement_quantity")
+    @JsonProperty("movementQuantity")
     private final int movementQuantity;
 
-    @JsonProperty("movement_type")
+    @JsonProperty("movementType")
     private final String movementType;
 
-    @JsonProperty("movement_status")
+    @JsonProperty("movementStatus")
     private final String movementStatus;
 
     @JsonCreator
     public StockMvmOutProdResource(
             @JsonProperty("id") UUID id,
-            @JsonProperty("order_id") UUID orderId,
-            @JsonProperty("orders_code") String ordersCode,
-            @JsonProperty("product_id") UUID productId,
-            @JsonProperty("product_code") String productCode,
-            @JsonProperty("product_name") String productName,
-            @JsonProperty("prod_variant_id") int prodVariantId,
-            @JsonProperty("color_id") int colorId,
-            @JsonProperty("color_name") String colorName,
-            @JsonProperty("size_id") int sizeId,
-            @JsonProperty("size_name") String sizeName,
-            @JsonProperty("stock_movement_code") String stockMovementCode,
-            @JsonProperty("movement_quantity") int movementQuantity,
-            @JsonProperty("movement_type") String movementType,
-            @JsonProperty("movement_status") String movementStatus
+            @JsonProperty("orderId") UUID orderId,
+            @JsonProperty("ordersCode") String ordersCode,
+            @JsonProperty("productId") UUID productId,
+            @JsonProperty("productCode") String productCode,
+            @JsonProperty("productName") String productName,
+            @JsonProperty("prodVariantId") int prodVariantId,
+            @JsonProperty("colorId") int colorId,
+            @JsonProperty("colorName") String colorName,
+            @JsonProperty("sizeId") int sizeId,
+            @JsonProperty("sizeName") String sizeName,
+            @JsonProperty("stockMovementCode") String stockMovementCode,
+            @JsonProperty("movementQuantity") int movementQuantity,
+            @JsonProperty("movementType") String movementType,
+            @JsonProperty("movementStatus") String movementStatus
     ) {
         this.id = id;
         this.orderId = orderId;

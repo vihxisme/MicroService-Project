@@ -44,4 +44,16 @@ public class WebClientConfiguration {
     public WebClient cartWebClient(WebClient.Builder webClientBuilder) {
         return webClientBuilder.baseUrl("http://cart-service/cart").build();
     }
+
+    @Bean
+    @Qualifier("paymentWebClient")
+    public WebClient paymentWebClient(WebClient.Builder webClientBuilder) {
+        return webClientBuilder.baseUrl("http://payment-service/payment").build();
+    }
+
+    @Bean
+    @Qualifier("orderWebClient")
+    public WebClient orderWebClient(WebClient.Builder webClientBuilder) {
+        return webClientBuilder.baseUrl("http://order-service/order").build();
+    }
 }

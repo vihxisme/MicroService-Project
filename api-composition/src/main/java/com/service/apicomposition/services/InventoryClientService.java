@@ -17,6 +17,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.service.apicomposition.commons.HasProdVariant;
 import com.service.apicomposition.commons.HasProduct;
+import com.service.apicomposition.dtos.InvenItemCheckStock;
+import com.service.apicomposition.dtos.ProductInvenDTO;
 import com.service.apicomposition.mappers.InventoryClientMapper;
 import com.service.apicomposition.requests.PaginationRequest;
 import com.service.apicomposition.resources.InventoryClientResource;
@@ -79,11 +81,53 @@ public class InventoryClientService {
                         });
     }
 
+    private Mono<Map<UUID, ProductInvenDTO>> productInven(List<InventoryClientResource> inventoryList, String path) {
+        return inventoryList.isEmpty() ? Mono.just(Collections.emptyMap())
+                : productClient.get()
+                        .uri(uriBuilder -> uriBuilder.path(path)
+                        .queryParam("productIds", inventoryList.stream()
+                                .map(InventoryClientResource::getProductId)
+                                .collect(Collectors.toList()))
+                        .build())
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<Map<UUID, ProductInvenDTO>>() {
+                        });
+    }
+
     // lấy danh sách StockMvmClientResource
     private Mono<PaginationResponse<StockMvmClientResource>> fetchStockMvmPageMono(String path, int page, int size) {
         return inventoryClient.get()
                 .uri(uriBuilder -> uriBuilder
                 .path(path)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<PaginationResponse<StockMvmClientResource>>() {
+                });
+    }
+
+    // lấy danh sách StockMvmClientResource theo inventoryId
+    private Mono<PaginationResponse<StockMvmClientResource>> fetchStockMvmPageMono(String path, UUID inventoryId, int page, int size) {
+        return inventoryClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("inventoryId", inventoryId)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<PaginationResponse<StockMvmClientResource>>() {
+                });
+    }
+
+    // lấy danh sách StockMvmClientResource theo inventoryId
+    private Mono<PaginationResponse<StockMvmClientResource>> fetchStockMvmPageMono(String path, UUID inventoryId, String type, int page, int size) {
+        return inventoryClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("inventoryId", inventoryId)
+                .queryParam("type", type)
                 .queryParam("page", page)
                 .queryParam("size", size)
                 .build())
@@ -127,13 +171,14 @@ public class InventoryClientService {
             List<InventoryClientResource> inventoryList = inventoryPage.getContent();
 
             // Tạo request lấy tên sản phẩm và danh mục
-            Mono<Map<UUID, String>> productNamesMono = productNamesMono(inventoryList, "/internal/product-names");
+            //     Mono<Map<UUID, String>> productNamesMono = productNamesMono(inventoryList, "/internal/product-names");
+            Mono<Map<UUID, ProductInvenDTO>> productInvenMono = productInven(inventoryList, "/internal/products/inven");
 
-            return productNamesMono.map(productNames -> {
+            return productInvenMono.map(product -> {
                 List<InventoryProdResource> inventoryProductResource = inventoryList.stream()
                         .map(inventory -> {
-                            String productName = productNames.getOrDefault(inventory.getProductId(), "Unknown ProductName");
-                            return inventoryClientMapper.toInventoryProductResource(inventory, productName);
+                            ProductInvenDTO productInvenDto = product.getOrDefault(inventory.getProductId(), null);
+                            return inventoryClientMapper.toInventoryProductResource(inventory, productInvenDto);
                         })
                         .collect(Collectors.toList());
 
@@ -268,7 +313,9 @@ public class InventoryClientService {
                                 .totalPages(stockMvmPages.getTotalPages())
                                 .totalElements(stockMvmPages.getTotalElements())
                                 .build();
-                    });
+                    })
+                    .doOnSuccess(result -> logger.info("Result: {}", result))
+                    .doOnError(error -> logger.error("Error: ", error));
         });
     }
 
@@ -303,7 +350,8 @@ public class InventoryClientService {
                 .switchIfEmpty(fetchStockMvmOutProd(
                         fetchStockMvmPageMono("/internal/stock-movement/type-out", request.getPage(), request.getSize())
                 ))
-                .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data));
+                .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data))
+                .doOnError(e -> logger.error("[getStockMvmOutProd] Error occurred: {}", e.getMessage(), e));
     }
 
     // lấy dữ liệu tổng được từ fetchItemProdVariant trong redis, nếu không có trong redis thì lưu dữ liệu vào redis
@@ -317,4 +365,61 @@ public class InventoryClientService {
                 ))
                 .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data));
     }
+
+    public Mono<Map<Integer, Boolean>> checkInventoryItem(List<InvenItemCheckStock> inventoryItemIds) {
+        return inventoryClient.post()
+                .uri("/internal/inven-item/check-stock")
+                .bodyValue(inventoryItemIds)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<Integer, Boolean>>() {
+                });
+    }
+
+    // lấy dữ liệu tổng hợp được từ fetchStockMvmInProd trong redis, nếu không có trong redis thì lưu dữ liệu vào redis
+    public Mono<PaginationResponse<StockMvmInProdResource>> getStockMvmInProd(UUID inventoryId, PaginationRequest request) {
+        String cacheKey = String.format("inven:stock:in:%s:%d:%d", inventoryId, request.getPage(), request.getSize());
+
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<StockMvmInProdResource>>() {
+        })
+                .switchIfEmpty(fetchStockMvmInProd(
+                        fetchStockMvmPageMono("/internal/stock-movement/type-in/by", inventoryId, request.getPage(), request.getSize())
+                ))
+                .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data));
+    }
+
+    // lấy dữ liệu tổng hợp được từ fetchStockMvmOutProd trong redis, nếu không có trong redis thì lưu dữ liệu vào redis
+    public Mono<PaginationResponse<StockMvmOutProdResource>> getStockMvmOutProd(UUID inventoryId, PaginationRequest request) {
+        String cacheKey = String.format("inven:stock:out:%s:%d:%d", inventoryId, request.getPage(), request.getSize());
+
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<StockMvmOutProdResource>>() {
+        })
+                .switchIfEmpty(fetchStockMvmOutProd(
+                        fetchStockMvmPageMono("/internal/stock-movement/type-out/by", inventoryId, request.getPage(), request.getSize())
+                ))
+                .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data));
+    }
+
+    public Mono<PaginationResponse<StockMvmInProdResource>> getStockMvmTypeProd(UUID inventoryId, PaginationRequest request) {
+        String cacheKey = String.format("inven:stock:%s:%d:%d", inventoryId, request.getPage(), request.getSize());
+
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<StockMvmInProdResource>>() {
+        })
+                .switchIfEmpty(fetchStockMvmInProd(
+                        fetchStockMvmPageMono("/internal/stock-movement/type-all", inventoryId, request.getPage(), request.getSize())
+                ))
+                .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data));
+    }
+
+    public Mono<PaginationResponse<StockMvmInProdResource>> getStockMvmTypeProd(UUID inventoryId, PaginationRequest request, String type) {
+        String cacheKey = String.format("inven:stock:%s:%s:%d:%d", inventoryId, type, request.getPage(), request.getSize());
+
+        return redisService.getData(cacheKey, new ParameterizedTypeReference<PaginationResponse<StockMvmInProdResource>>() {
+        })
+                .switchIfEmpty(fetchStockMvmInProd(
+                        fetchStockMvmPageMono("/internal/stock-movement/type", inventoryId, type, request.getPage(), request.getSize())
+                ))
+                .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data))
+                .doOnError(e -> logger.error("[getStockMvmOutProd] Error occurred: {}", e.getMessage(), e));
+    }
+
 }

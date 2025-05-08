@@ -1,5 +1,7 @@
 package com.service.apicomposition.mappers;
 
+import java.math.BigDecimal;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -7,8 +9,9 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import com.service.apicomposition.resources.DiscountClientResource;
 import com.service.apicomposition.resources.ProdAllInfoResource;
 import com.service.apicomposition.resources.ProdWithDiscountAllInfoResource;
-import com.service.apicomposition.resources.ProductClientResource;
 import com.service.apicomposition.resources.ProdWithDiscountResource;
+import com.service.apicomposition.resources.ProductClientResource;
+import com.service.apicomposition.resources.TopProductResource;
 
 import jakarta.ws.rs.core.Context;
 
@@ -28,4 +31,6 @@ public interface ProductDiscountMapper {
             ProdAllInfoResource product,
             DiscountClientResource discount,
             @Context ComponentMapper componentMapper);
+
+    TopProductResource toTopProductResource(ProductClientResource productClientResource, BigDecimal totalRevenue);
 }

@@ -1,7 +1,9 @@
 package com.service.apicomposition.services;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -21,10 +23,10 @@ import com.service.apicomposition.resources.DiscountClientResource;
 import com.service.apicomposition.resources.ProdAllInfoResource;
 import com.service.apicomposition.resources.ProdWithDiscountAllInfoResource;
 import com.service.apicomposition.resources.ProductClientResource;
+import com.service.apicomposition.resources.TopProductResource;
 import com.service.apicomposition.resources.ProdWithDiscountResource;
 import com.service.apicomposition.responses.PaginationResponse;
 
-import jakarta.ws.rs.core.UriBuilder;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -37,6 +39,10 @@ public class ProductClientService {
     @Autowired
     @Qualifier("discountWebClient")
     private WebClient discountClient;
+
+    @Autowired
+    @Qualifier("orderWebClient")
+    private WebClient orderClient;
 
     @Autowired
     private RedisService redisService;
@@ -115,6 +121,40 @@ public class ProductClientService {
                 .build())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ProdAllInfoResource>() {
+                });
+    }
+
+    private Mono<Map<UUID, ProductClientResource>> fetchProductByIdsMono(String path, List<UUID> productIds) {
+        return productClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("productIds", productIds)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<UUID, ProductClientResource>>() {
+                });
+    }
+
+    private Mono<Map<UUID, BigDecimal>> fetchTopRevenueMono(String path, Integer limit) {
+        return orderClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("limit", limit)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<UUID, BigDecimal>>() {
+                });
+    }
+
+    private Mono<Map<UUID, BigDecimal>> fetchTopRevenueMono(String path, Integer limit, String rangeType) {
+        return orderClient.get()
+                .uri(uriBuilder -> uriBuilder
+                .path(path)
+                .queryParam("limit", limit)
+                .queryParam("rangeType", rangeType)
+                .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<UUID, BigDecimal>>() {
                 });
     }
 
@@ -250,6 +290,94 @@ public class ProductClientService {
                 .doOnError(error -> logger.error("Error: ", error));
     }
 
+    /**
+     * Lấy danh sách sản phẩm bán chạy nhất dựa trên doanh thu.
+     *
+     * @param topProductMono Mono chứa Map<UUID, BigDecimal> với UUID là ID sản
+     * phẩm và BigDecimal là doanh thu tương ứng
+     * @return Mono chứa danh sách TopProductResource đã kết hợp thông tin sản
+     * phẩm và doanh thu
+     */
+    private Mono<List<TopProductResource>> fetchTopProduct(Mono<Map<UUID, BigDecimal>> topProductMono) {
+        return topProductMono.flatMap(topRevenue -> {
+            List<UUID> productIds = new ArrayList<>(topRevenue.keySet());
+
+            return fetchProductByIdsMono("/internal/products/by", productIds)
+                    .map(productMap -> {
+                        List<TopProductResource> result = new ArrayList<>();
+
+                        topRevenue.forEach((productId, revenue) -> {
+                            ProductClientResource product = productMap.get(productId);
+                            if (product != null) {
+                                TopProductResource resource = productDiscountMapper.toTopProductResource(product, revenue);
+                                result.add(resource);
+                            }
+                        });
+
+                        result.sort((a, b) -> b.getTotalRevenue().compareTo(a.getTotalRevenue()));
+
+                        return result;
+                    });
+        });
+    }
+
+    /**
+     * Lấy danh sách sản phẩm doanh thu cao nhất kèm thông tin giảm giá tương
+     * ứng. - Dựa trên map doanh thu từ topProductMono (UUID là ID sản phẩm,
+     * BigDecimal là doanh thu). - Gọi API để lấy thông tin sản phẩm và danh
+     * sách giảm giá. - Ghép thông tin giảm giá phù hợp (áp dụng theo ID sản
+     * phẩm hoặc category).
+     */
+    private Mono<List<ProdWithDiscountResource>> fetchTopProductWithDiscount(
+            Mono<Map<UUID, BigDecimal>> topProductMono
+    ) {
+        return topProductMono.flatMap(topRevenue -> {
+            List<UUID> productIds = new ArrayList<>(topRevenue.keySet());
+
+            Mono<Map<UUID, ProductClientResource>> productMono = fetchProductByIdsMono("/internal/products/by", productIds);
+            Mono<List<DiscountClientResource>> discountListMono = fetchDiscountListMono("/internal/discount-client/info");
+
+            return Mono.zip(productMono, discountListMono)
+                    .map(tuple -> {
+                        Map<UUID, ProductClientResource> productMap = tuple.getT1();
+                        List<DiscountClientResource> discounts = tuple.getT2();
+
+                        List<ProductClientResource> productList = productIds.stream()
+                                .map(productMap::get)
+                                .filter(Objects::nonNull)
+                                .toList();
+
+                        return productList.stream()
+                                .map(product -> {
+                                    DiscountClientResource discount = discounts.stream()
+                                            .filter(d
+                                                    -> // Áp dụng cho tất cả sản phẩm (targetId null)
+                                                    (d.getTargetId() == null && TargetTypeEnum.PRODUCT.toString().equals(d.getTargetType()))
+                                            // Hoặc áp dụng cho product cụ thể
+                                            || (TargetTypeEnum.PRODUCT.toString().equals(d.getTargetType())
+                                            && Objects.equals(d.getTargetId(), product.getId()))
+                                            // Hoặc áp dụng theo category
+                                            || (TargetTypeEnum.CATEGORIE.toString().equals(d.getTargetType())
+                                            && Objects.equals(d.getTargetId(), product.getCategorieId()))
+                                            )
+                                            .findFirst()
+                                            .orElse(new DiscountClientResource(
+                                                    product.getId(),
+                                                    BigDecimal.ZERO, null,
+                                                    null,
+                                                    null, null));
+
+                                    return productDiscountMapper
+                                            .toProductWithDiscountResource(product,
+                                                    discount,
+                                                    componentMapper);
+                                })
+                                .toList();
+                    });
+
+        });
+    }
+
     // lấy ra danh sách product từ redis, nếu không có trong redis sẽ call api để tổng hợp dữ liệu để đẩy lên redis
     public Mono<PaginationResponse<ProdWithDiscountResource>> getProductWithDiscount(PaginationRequest request) {
         String cacheKey = String.format("prod:discount:%d:%d", request.getPage(), request.getSize());
@@ -362,6 +490,37 @@ public class ProductClientService {
                 fectProductAllInfoMono(productId, "/internal/products/detail-info"),
                 // Fetch danh sách các discount đang hoạt động từ API nội bộ
                 fetchDiscountListMono("/internal/discount-client/info")
+        );
+    }
+
+    public Mono<List<TopProductResource>> getListTopProduct(Integer limit) {
+        return fetchTopProduct(
+                fetchTopRevenueMono("/internal/stats/top-product/by-revenue", limit)
+        );
+    }
+
+    public Mono<List<ProdWithDiscountResource>> getTopProductWithDiscount(Integer limit) {
+//         String cacheKey = String.format("top-prod:discount:%d", limit);
+//         final long DURATION_TTL = 3600;
+
+//         return redisService.getData(cacheKey, new ParameterizedTypeReference<List<ProdWithDiscountResource>>() {
+//         })
+//                 .switchIfEmpty(
+//                         fetchTopProductWithDiscount(
+//                                 fetchTopRevenueMono("/internal/stats/top-product/by-revenue", limit)
+//                         )
+//                 )
+//                 .flatMap(data -> redisService.saveData(cacheKey, data, DURATION_TTL).thenReturn(data))
+//                 .doOnSuccess(v -> logger.info("Synced top discounted products to Redis with key: {}", cacheKey))
+//                 .doOnError(e -> logger.error("Error syncing top discounted products to Redis (key: {}): {}", cacheKey, e.getMessage()));
+        return fetchTopProductWithDiscount(
+                fetchTopRevenueMono("/internal/stats/top-product/by-revenue", limit)
+        );
+    }
+
+    public Mono<List<TopProductResource>> getListTopProduct(Integer limit, String rangeType) {
+        return fetchTopProduct(
+                fetchTopRevenueMono("/internal/stats/top-product/by", limit, rangeType)
         );
     }
 

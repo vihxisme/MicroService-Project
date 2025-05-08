@@ -6,9 +6,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -45,14 +42,16 @@ public class RedisService {
                 .map(json -> {
                     JavaType javaType = objectMapper.getTypeFactory().constructType(typeRef.getType());
                     return objectMapper.convertValue(json, objectMapper.constructType(javaType));
+                    // try {
+                    //     return objectMapper.readValue(json.toString(), javaType);
+                    // } catch (Exception e) {
+                    //     logger.error("Error deserializing JSON from Redis: {}", e.getMessage());
+                    //     throw new RuntimeException("Deserialization error", e);
+                    // }
                 });
     }
 
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = "clear-cache", durable = "true"),
-            exchange = @Exchange(name = "cache-update-exchange", type = "direct"),
-            key = "clear-cache"
-    ))
+    @RabbitListener(queues = "clear-cache:queue")
     public Mono<Void> clearCacheWithPrefix(String prefix) {
         try {
             Flux<String> keys = reactiveRedisTemplate.keys(prefix + "*");
