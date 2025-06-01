@@ -2,6 +2,10 @@
 
 Đây là một kiến trúc Microservices được xây dựng để cung cấp các dịch vụ thương mại điện tử. Dự án này bao gồm một tập hợp các dịch vụ nhỏ, độc lập, giao tiếp với nhau thông qua các API nhẹ.
 
+### Liên kết dự án
+- **Client UI**: [Ecommerce-Client-UI](https://github.com/vihxisme/ecommerce-client-ui.git)
+- **Admin UI**: [Ecommerce-Admin-UI](https://github.com/vihxisme/ecommerce-admin-ui.git)
+
 ## 🌟 Tổng quan dự án
 
 Dự án này được thiết kế để giải quyết nhu cầu về một nền tảng thương mại điện tử mạnh mẽ. Mỗi dịch vụ được triển khai độc lập, cho phép phát triển và triển khai nhanh chóng.
