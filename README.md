@@ -8,10 +8,10 @@ Dự án này được thiết kế để giải quyết nhu cầu về một n�
 
 ### Các thành phần chính:
 
-* **Discovery Service (Eureka Server):** Đăng ký và khám phá các dịch vụ.
-* **API Gateway:** Điểm vào duy nhất cho tất cả các yêu cầu từ client, xử lý định tuyến, bảo mật, v.v.
-* **Các Microservices lõi:** Cung cấp các chức năng nghiệp vụ cụ thể.
-* **Monitoring/Admin:** Giám sát sức khỏe và hiệu suất của các dịch vụ.
+- **Discovery Service (Eureka Server):** Đăng ký và khám phá các dịch vụ.
+- **API Gateway:** Điểm vào duy nhất cho tất cả các yêu cầu từ client, xử lý định tuyến, bảo mật, v.v.
+- **Các Microservices lõi:** Cung cấp các chức năng nghiệp vụ cụ thể.
+- **Monitoring/Admin:** Giám sát sức khỏe và hiệu suất của các dịch vụ.
 
 ## 📦 Kiến trúc Microservices
 
@@ -25,7 +25,7 @@ Dưới đây là danh sách các Microservices có trong dự án và vai trò 
 2.  **`about-service`**: Dịch vụ quản lý các thông tin của cửa hàng(vd: banner, store, thông tin liên hệ của cửa hàng,...)
 3.  **`api-composition`**: Tổng hợp dữ liệu từ nhiều microservices khác để cung cấp một API phức tạp hơn cho client.
 4.  **`api-gateway`**: Cổng API trung tâm, định tuyến yêu cầu từ client đến các microservices phù hợp, xử lý xác thực, ủy quyền và cân bằng tải.
-5.  **`auth-service`**: Dịch vụ xác thực và ủy quyền người dùng. Quản lý đăng nhập, đăng ký và cấp phát token 
+5.  **`auth-service`**: Dịch vụ xác thực và ủy quyền người dùng. Quản lý đăng nhập, đăng ký và cấp phát token
 6.  **`cart-service`**: Dịch vụ quản lý giỏ hàng của người dùng. Cho phép thêm/xóa sản phẩm vào giỏ hàng.
 7.  **`customer-service`**: Dịch vụ quản lý thông tin khách hàng, bao gồm hồ sơ người dùng, địa chỉ, v.v.
 8.  **`discount-service`**: Dịch vụ quản lý các chương trình giảm giá áp dụng chiết khấu.
@@ -38,28 +38,29 @@ Dưới đây là danh sách các Microservices có trong dự án và vai trò 
 
 ## 🛠️ Công nghệ sử dụng
 
-* **Ngôn ngữ lập trình:** Java 
-* **Framework:** Spring Boot
-* **Discovery Service:** Netflix Eureka
-* **API Gateway:** Spring Cloud Gateway
-* **Database:** MySQL, Redis
-* **Message Broker:** RabbitMQ
-* **Containerization:** Docker
-* **Build Tool:** Maven 
-* **Version Control:** Git
+- **Ngôn ngữ lập trình:** Java
+- **Framework:** Spring Boot
+- **Discovery Service:** Netflix Eureka
+- **API Gateway:** Spring Cloud Gateway
+- **Database:** MySQL, Redis
+- **Message Broker:** RabbitMQ
+- **Containerization:** Docker
+- **Build Tool:** Maven
+- **Version Control:** Git
 
 ## 🚀 Thiết lập và chạy dự án
 
 ### Yêu cầu tiên quyết:
 
-* JDK (Java Development Kit) `21` (hoặc phiên bản bạn đang dùng)
-* Maven `3.x`
-* Docker Desktop (hoặc Docker Engine)
-* MySQL, Redis, RabbitMQ
+- JDK (Java Development Kit) `21` (hoặc phiên bản bạn đang dùng)
+- Maven `3.x`
+- Docker Desktop (hoặc Docker Engine)
+- MySQL, Redis, RabbitMQ
 
 ### Các bước khởi động:
 
 1.  **Clone repository:**
+
     ```bash
     git clone https://github.com/vihxisme/MicroService-Project/
     cd your-repo
@@ -70,31 +71,34 @@ Dưới đây là danh sách các Microservices có trong dự án và vai trò 
 
 3.  **Chạy với Docker Compose (khuyến nghị):**
     Đây là cách dễ nhất để chạy tất cả các dịch vụ cùng lúc.
+
     ```bash
     docker-compose up --build
     ```
+
     Lệnh này sẽ xây dựng lại các Docker image và khởi động tất cả các container được định nghĩa trong `docker-compose.yml`.
 
     Để chạy ở chế độ nền:
+
     ```bash
     docker-compose up --build -d
     ```
 
 4.  **Chạy từng Microservice độc lập (nếu cần):**
     Nếu bạn muốn phát triển hoặc debug một dịch vụ cụ thể:
-    * Mở từng thư mục dịch vụ (ví dụ: `cd eureka-server`).
-    * Sử dụng Maven để đóng gói và chạy:
-        ```bash
-        mvn clean install
-        mvn spring-boot:run
-        ```
-    * Lặp lại cho các dịch vụ khác theo thứ tự phụ thuộc (ví dụ: Eureka Server -> API Gateway -> các dịch vụ khác).
+    - Mở từng thư mục dịch vụ (ví dụ: `cd eureka-server`).
+    - Sử dụng Maven để đóng gói và chạy:
+      ```bash
+      mvn clean install
+      mvn spring-boot:run
+      ```
+    - Lặp lại cho các dịch vụ khác theo thứ tự phụ thuộc (ví dụ: Eureka Server -> API Gateway -> các dịch vụ khác).
 
 ### Endpoint chính:
 
-* **Eureka Dashboard:** `http://localhost:8761` (hoặc cổng cấu hình)
-* **API Gateway:** `http://localhost:8888` (hoặc cổng cấu hình)
-    * Bạn có thể truy cập các dịch vụ thông qua Gateway, ví dụ: `http://localhost:8888/products/all`, `http://localhost:8888/customers/{id}` (thay đổi theo API của bạn).
+- **Eureka Dashboard:** `http://localhost:8761` (hoặc cổng cấu hình)
+- **API Gateway:** `http://localhost:8888` (hoặc cổng cấu hình)
+  - Bạn có thể truy cập các dịch vụ thông qua Gateway, ví dụ: `http://localhost:8888/products/all`, `http://localhost:8888/customers/{id}` (thay đổi theo API của bạn).
 
 ## 🤝 Đóng góp
 
@@ -113,7 +117,7 @@ Dự án này được cấp phép theo (chọn giấy phép của bạn, ví d�
 
 ## 📧 Liên hệ
 
-* Tên của bạn - `NVV`
-* https://github.com/vihxisme/
+- `NVV` - vihxisme
+- https://github.com/vihxisme/
 
 ---
